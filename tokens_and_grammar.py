@@ -15,23 +15,23 @@ import ply.lex as lex
 #Definimos lista de palabras reservadas, (Juanma, reserved es reservado en Ingles)
 
 reserved = {
-        'if': 'IF',
-        'else': 'ELSE',
-        'when': 'WHEN',
-        'with': 'WITH',
-        'range': 'RANGE',
-        'true': 'TRUE',
-        'false': 'FALSE',
-        'in': 'IN',
-        'out': 'OUT',
-        'for': 'FOR',
-        'is': 'IS',
-        'while': 'WHILE',
-        'and': 'AND',
-        'or': 'OR',
-        'not': 'NOT',
-        'func': 'FUNC',
-        'return': 'RETURN'
+            'if': 'IF',
+            'else': 'ELSE',
+            'when': 'WHEN',
+            'with': 'WITH',
+            'range': 'RANGE',
+            'true': 'TRUE',
+            'false': 'FALSE',
+            'in': 'IN',
+            'out': 'OUT',
+            'for': 'FOR',
+            'is': 'IS',
+            'while': 'WHILE',
+            'and': 'AND',
+            'or': 'OR',
+            'not': 'NOT',
+            'func': 'FUNC',
+            'return': 'RETURN'
         }
 
 tokens = ['INT', 'FLOAT', 'ID', 'PLUS', 'MINUS', 'GT', 
@@ -73,7 +73,7 @@ def t_newline(t):
 t_ignore = " \t"
 
 def t_error(t):
-    print("Eh caracter ilegal", t.value[0])
+    print("Wrong character at", t.value[0])
     t.lexer.skip(1)
     
 
@@ -173,7 +173,6 @@ def p_out(p):
     
 def p_outD(p):
     '''outD : | expresion, outD
-              | expresion
               | empty
     '''
 
@@ -193,17 +192,17 @@ def p_llamada(p):
 
 def p_llamadaD(p):
     '''llamadaD : | expresion, llamadaD
-                  | expresion 
                   | empty
     '''
     
 def p_expresion(p):
-    '''expresion: | expr
-                  | NOT expr
-                  | expr and expresion
-                  | expr or expresion
-                  | NOT expr and expresion
-                  | NOT expr or expresion
+    '''expresion: | not expr and expresion
+                  | not expr or expresion
+    '''
+
+def p_not(p):
+    '''not: | NOT
+            | empty
     '''
 
 # Aqui lo cambia para la madre esa que me habias dicho de que se podia:
