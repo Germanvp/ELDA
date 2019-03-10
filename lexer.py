@@ -47,23 +47,7 @@ tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'SIMPOPER', 'COMPOPER', 'RELO
 t_SIMPOPER = r'\+|\-'
 t_COMPOPER = r'\*|\/'
 t_RELOP = r'\<|\>|\<\>|\<\=|\>\=|\=\='
-# t_PLUS = r'\+'
-# t_MINUS = r'\-'
-# t_TIMES = r'\*'
-# t_DIVIDE = r'/'
 t_EQUAL = r'\='
-# t_LPAREN = r'\('
-# t_RPAREN = r'\)'
-# t_LSQRPAREN = r'\['
-# t_RSQRPAREN = r'\]'
-# t_SM = r'<>'
-# t_GT = r'>'
-# t_LT = r'<'
-# t_DC = r'\;'
-# t_LCORCH = r'\{'
-# t_RCORCH = r'\}'
-# t_DOTDOT = r'\:'
-# t_COMMA = r','
 t_INT = r'\d+'
 t_FLOAT = r'([0-9])+\.([0-9])*'
 t_STRING = r'/"\w*"/'
@@ -75,9 +59,9 @@ def t_ID(t):
     t.type = reserved.get(t.value, 'ID')
     return t
 
-# def t_newline(t):
-#     r'\n+'
-#     t.lexer.lineno += len(t.value)
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
 # t_ignore = " \t"
 
@@ -88,6 +72,6 @@ def t_error(t):
 
 lexer = lex.lex()
 
-lex.input("void main () { int test = 12; }")
+lex.input('string test = "hola";')
 for token in iter(lex.token, None):
     print(repr(token.type), repr(token.value))

@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar  8 07:10:43 2019
+
+@author: Juan Manuel Perez & German Villacorta
+"""
+
 ###
 #   Parser
 ###
@@ -11,16 +19,9 @@ def p_empty(p):
      pass
  
 def p_program(p):
-    '''program : programD programF main
-    '''
-def p_programD(p):
-    '''programD : declaracion programD
-                | empty 
-    '''
-
-def p_programF(p):
-    '''programF : funcion programF
-                | empty 
+    '''program : declaracion program
+               | funcion program
+               | main
     '''
 
 def p_main(p):
