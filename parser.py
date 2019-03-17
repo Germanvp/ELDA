@@ -17,8 +17,8 @@ vars_table = VarsTable()
 
 def p_empty(p):
     """empty :"""
+    p[0] = None
     pass
-
 
 def p_program(p):
     """program : declaracion program
@@ -28,18 +28,12 @@ def p_program(p):
 
 
 def p_main(p):
-    """main : void main_func '(' ')' bloque
-    """
-
-
-
-def p_main_func(p):
-    """main_func : MAIN
+    """main : void MAIN '(' ')' bloque
     """
     if vars_table.initialized == False:
         vars_table.initialize()
     
-    vars_table.create_table(p[1], current_type)
+    vars_table.create_table(p[2], p[1])
     
 
 # Aqui hay conflicto
@@ -73,28 +67,15 @@ def p_bloque_simp(p):
     """bloque_simp : '{' bloqueE '}'
     """
 
-
-def p_var_declaration(p):
-    """var_declaration : ID"""
-    
-    if vars_table.initialized == False:
-        vars_table.initialize()
-            
-    vars_table.insert(p[1], current_type, 0, None)
-    
-
-def p_function_declaration(p):
-    """function_declaration : ID"""
-    if vars_table.initialized == False:
-        vars_table.initialize()
-        
-    vars_table.create_table(p[1], current_type)
-    
 def p_declaracion(p):
-    """declaracion : type var_declaration EQUAL expresion ';'
-                    | type var_declaration ';'
+    """declaracion : type ID EQUAL expresion ';'
+                    | type ID ';'
     """
-
+    if vars_table.initialized == False:
+        vars_table.initialize()
+    
+    #is_array = len(p[1]) > 1
+    vars_table.insert(p[2], p[1], 0, None)
 
 def p_estatuto(p):
     """estatuto : asignacion
@@ -186,7 +167,7 @@ def p_exp(p):
     """exp : termino
            | termino SIMPOPER exp
     """
-
+    
 
 def p_termino(p):
     """termino : factor COMPOPER termino
@@ -216,7 +197,6 @@ def p_id(p):
     """id : ID indice
     """
 
-
 def p_indice(p):
     """indice : '[' expresion ']'
               | '[' expresion ']' '[' expresion ']'
@@ -236,24 +216,26 @@ def p_arregloD(p):
 
 
 def p_funcion(p):
-    """funcion : type function_declaration '(' params ')' bloque
-                | void function_declaration '(' params ')' bloque
+    """funcion : type ID '(' params ')' bloque
+                | void ID '(' params ')' bloque
     """
-
+    vars_table.create_table(p[2], p[1])
 
 def p_void(p):
     """void : VOID
     """
-    global current_type
-    current_type = p[1]
+    p[0] = p[1]
+    
 
 
 def p_params(p):
-    """params : type var_declaration
-              | type var_declaration ',' params
+    """params : type ID
+              | type ID ',' params
               | empty
     """
-
+    if (p[1] is not None):
+        #is_array = len(p) > 1
+        vars_table.insert(p[2], p[1], 0, None)
 
 def p_type(p):
     """type : TYPE_BOOL
@@ -263,8 +245,7 @@ def p_type(p):
             | type '[' INT ']'
             | type '[' INT ']' '[' INT ']'
     """
-    global current_type
-    current_type = p[1]
+    p[0] = p[1]
 
 
 def p_error(p):
