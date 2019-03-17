@@ -11,24 +11,9 @@ Created on Fri Mar  8 07:10:43 2019
 ###
 from ply import yacc
 from lexer import tokens
+from vars_table import VarsTable
 
-
-function_directory = None
-current_type = None
-current_function = None
-
-
-def check_function_dir():
-    global function_directory, current_function
-    if function_directory is None:
-        function_directory = {
-            'global': {
-                'type': 'void',
-                'vars': {}
-            }
-        }
-        current_function = function_directory['global']
-
+vars_table = VarsTable()
 
 def p_empty(p):
     """empty :"""
@@ -51,17 +36,11 @@ def p_main(p):
 def p_main_func(p):
     """main_func : MAIN
     """
-    check_function_dir()
-    global function_directory, current_function, current_type
-    if p[1] in function_directory:
-        raise TypeError("Function already declared '%s'" % (p[1],))
-    else:
-        function_directory[p[1]] = {
-            'type': current_type,
-            'vars': {}
-        }
-        current_function = function_directory[p[1]]
-
+    if vars_table.initialized == False:
+        vars_table.initialize()
+    
+    vars_table.create_table(p[1], current_type)
+    
 
 # Aqui hay conflicto
 def p_bloque(p):
@@ -97,33 +76,20 @@ def p_bloque_simp(p):
 
 def p_var_declaration(p):
     """var_declaration : ID"""
-    global function_directory, current_type, current_function
-    check_function_dir()
-    if current_function is not None:
-        if 'vars' not in current_function:
-            current_function['vars'] = {}
-        if p[1] in current_function['vars'] or p[1] in function_directory['global']['vars']:
-            raise TypeError("Variable already declared '%s" % (p[1],))
-        else:
-            current_function['vars'][p[1]] = {
-                'type': current_type
-            }
-
+    
+    if vars_table.initialized == False:
+        vars_table.initialize()
+            
+    vars_table.insert(p[1], current_type, 0, None)
+    
 
 def p_function_declaration(p):
     """function_declaration : ID"""
-    global function_directory, current_type, current_function
-    check_function_dir()
-    if p[1] in function_directory:
-        raise TypeError("Function already declared '%s'" % (p[1],))
-    else:
-        function_directory[p[1]] = {
-            'type': current_type,
-            'vars': {}
-        }
-        current_function = function_directory[p[1]]
-
-
+    if vars_table.initialized == False:
+        vars_table.initialize()
+        
+    vars_table.create_table(p[1], current_type)
+    
 def p_declaracion(p):
     """declaracion : type var_declaration EQUAL expresion ';'
                     | type var_declaration ';'
