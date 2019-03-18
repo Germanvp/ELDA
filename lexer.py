@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Lexer
 Created on Fri Mar  8 07:10:43 2019
 
 @author: Juan Manuel Perez & German Villacorta
 """
 
 from ply import lex
-
-###
-#   Lexer
-###
 
 literals = ['(', ')', '{', '}', ',', ':', ';', '.', '[', ']']
 
@@ -50,7 +47,7 @@ t_RELOP = r'\<|\>|\<\>|\<\=|\>\=|\=\='
 t_EQUAL = r'\='
 t_INT = r'\d+'
 t_FLOAT = r'([0-9])+\.([0-9])*'
-t_STRING = r'/"\w*"/'
+t_STRING = r'"\w*"'
 t_ignore_SPACE = r'(\s|\n|\r)+'
 
 
@@ -59,11 +56,13 @@ def t_ID(t):
     t.type = reserved.get(t.value, 'ID')
     return t
 
+
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
 # t_ignore = " \t"
+
 
 def t_error(t):
     raise TypeError("Unknown token '%s'" % (t.value[0],))
@@ -72,6 +71,6 @@ def t_error(t):
 
 lexer = lex.lex()
 
-lex.input('string test = "hola";')
-for token in iter(lex.token, None):
-    print(repr(token.type), repr(token.value))
+# lex.input('int test = "hola";')
+# for token in iter(lex.token, None):
+#     print(repr(token.type), repr(token.value))
