@@ -11,6 +11,9 @@ import json
 
 # For parser and lexer testing, writing code on terminal
 # int a = 5; int b = 50; int funcA() { int c;} void main(){}
+# int a = 5; string b = "a"; int funcA(string c) { int d;} void main(){int[4] ar;}
+# int a = 5; void main(){ int b = 0; a = 7; b = 100;}
+# int a = 5; int b = 50; int funcA(int test, int test2) { int c;} void main(){}
 
 while True:
     try:

@@ -37,19 +37,33 @@ class VarsTable:
         self.current_scope = self.table["global"]
         self.initialized = True
 
-    def insert(self, var_id, var_type, is_array, dope_vector):
-        if var_id not in self.current_scope["vars"] and var_id not in self.table["global"]:
+    # Funcion que inserta una variable a la tabla.
+    def insert(self, var_id, var_type, is_array, dope_vector, value):
+        
+        if var_id not in self.current_scope["vars"] and var_id not in self.table["global"]["vars"]:
             table_entry = {
                 "type": var_type,
                 "is_array": is_array,
-                "dope_vector": dope_vector
+                "dope_vector": dope_vector,
+                "value": value
             }
 
             self.current_scope["vars"][var_id] = table_entry
         else:
             raise TypeError("Variable already declared '%s" % (var_id))
 
-        return
+
+    # Funcion que updetea una variable en la tabla. Sirve para asignaciones.
+    def update_variable(self, var_id, value):
+        
+        if var_id in self.current_scope["vars"]:
+            self.current_scope["vars"][var_id]["value"] = value
+        elif var_id in self.table["global"]["vars"]:
+            self.table["global"]["vars"][var_id]["value"] = value
+            
+        else:
+            raise TypeError("Variable not declared '%s" % (var_id))  
+            
 
     ### Crea una nueva tabla. Duh. Parent es un apuntador a la tabla que la creo.
     def create_table(self, table_id, return_type):
