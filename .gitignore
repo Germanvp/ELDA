@@ -4,3 +4,5 @@ parsetab.py
 .idea/*
 .vscode/*
 __pycache__/*
+__pycache__/lexer.cpython-36.pyc
+__pycache__/parser.cpython-36.pyc

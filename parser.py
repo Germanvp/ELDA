@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Parser
 Created on Fri Mar  8 07:10:43 2019
 
 @author: Juan Manuel Perez & German Villacorta
 """
 
-###
-#   Parser
-###
 from ply import yacc
 from lexer import tokens
 from vars_table import VarsTable
 
 vars_table = VarsTable()
 
+
 def p_empty(p):
     """empty :"""
     p[0] = None
     pass
+
 
 def p_program(p):
     """program : declaracion program
@@ -27,19 +27,22 @@ def p_program(p):
     """
 
 
-def p_main(p):
-    """main : void MAIN '(' ')' bloque
+def p_main_id(p):
+    """main_id : void MAIN
     """
-    if vars_table.initialized == False:
+    if not vars_table.initialized:
         vars_table.initialize()
-    
-    vars_table.create_table(p[2], p[1])
-    
 
-# Aqui hay conflicto
+    vars_table.create_table(p[2], p[1])
+
+
+def p_main(p):
+    """main : main_id '(' ')' bloque
+    """
+
+
 def p_bloque(p):
     """bloque : '{' bloqueD bloqueE return '}'
-
     """
 
 
@@ -62,20 +65,26 @@ def p_bloqueE(p):
     """
 
 
-# Checa este. No se si podemos reusar las D' de otros?
 def p_bloque_simp(p):
     """bloque_simp : '{' bloqueE '}'
     """
 
-def p_declaracion(p):
-    """declaracion : type ID EQUAL expresion ';'
-                    | type ID ';'
+
+def p_declaracion_id(p):
+    """declaracion_id : type ID
     """
-    if vars_table.initialized == False:
+    if not vars_table.initialized:
         vars_table.initialize()
-    
-    #is_array = len(p[1]) > 1
-    vars_table.insert(p[2], p[1], 0, None)
+
+    # is_array = len(p[1]) > 1
+    vars_table.insert(p[2], p[1], False, None)
+
+
+def p_declaracion(p):
+    """declaracion : declaracion_id EQUAL expresion ';'
+                    | declaracion_id ';'
+    """
+
 
 def p_estatuto(p):
     """estatuto : asignacion
@@ -167,7 +176,7 @@ def p_exp(p):
     """exp : termino
            | termino SIMPOPER exp
     """
-    
+
 
 def p_termino(p):
     """termino : factor COMPOPER termino
@@ -197,6 +206,7 @@ def p_id(p):
     """id : ID indice
     """
 
+
 def p_indice(p):
     """indice : '[' expresion ']'
               | '[' expresion ']' '[' expresion ']'
@@ -215,27 +225,30 @@ def p_arregloD(p):
     """
 
 
-def p_funcion(p):
-    """funcion : type ID '(' params ')' bloque
-                | void ID '(' params ')' bloque
+def p_funcion_id(p):
+    """funcion_id : type ID
+                  | void ID
     """
     vars_table.create_table(p[2], p[1])
+
+
+def p_funcion(p):
+    """funcion : funcion_id '(' params ')' bloque
+    """
+
 
 def p_void(p):
     """void : VOID
     """
     p[0] = p[1]
-    
 
 
 def p_params(p):
-    """params : type ID
-              | type ID ',' params
+    """params : declaracion_id
+              | declaracion_id ',' params
               | empty
     """
-    if (p[1] is not None):
-        #is_array = len(p) > 1
-        vars_table.insert(p[2], p[1], 0, None)
+
 
 def p_type(p):
     """type : TYPE_BOOL

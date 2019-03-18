@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Lexer
 Created on Fri Mar  8 07:10:43 2019
 
 @author: Juan Manuel Perez & German Villacorta
 """
 
 from ply import lex
-import parser
-
-###
-#   Lexer
-###
 
 literals = ['(', ')', '{', '}', ',', ':', ';', '.', '[', ']']
 
