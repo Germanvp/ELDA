@@ -1,27 +1,12 @@
-def push(stack, value):
+class Quadruple:
     """
-    Adds a member to the specified stack.
-    :param stack: The stack to add to
-    :param value: The value to add
-    """
-    stack.append(value)
-
-
-def pop(stack):
-    """
-    Pops a member from the specified stack.
-    :param stack: The stack to pop from
-    :return: The popped value
-    """
-    return stack.pop()
-
-
-class Quadruples:
-    """
-    Handles quadruple generation and stacks.
+    Quadruple type. 
     """
 
-    def __init__(self):
-        self.operand_stack = []
-        self.operator_stack = []
-        self.type_stack = []
+    def __init__(self, op1, op2, operator, result):
+        self.op1 = op1
+        self.op2 = op2
+        self.operator = operator
+        self.result = result
+        
+    

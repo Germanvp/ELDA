@@ -227,6 +227,7 @@ class SemanticCube:
         :param operator: Operator being applied to the types
         :return: Result type if valid, raises TypeError otherwise
         """
+        
         if self.semantic_cube[left_type][right_type][operator] is not 'Error':
             return self.semantic_cube[left_type][right_type][operator]
         raise TypeError(

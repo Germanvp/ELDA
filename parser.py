@@ -10,11 +10,10 @@ Created on Fri Mar  8 07:10:43 2019
 from ply import yacc
 from lexer import tokens
 from vars_table import VarsTable
-from quadruples import Quadruples, push, pop
+from intermediate_code_generator import ICG
 
 vars_table = VarsTable()
-quads = Quadruples()
-
+ic_generator = ICG()
 
 def p_empty(p):
     """empty :"""
@@ -36,6 +35,7 @@ def p_main_id(p):
         vars_table.initialize()
 
     vars_table.create_table(p[2], p[1])
+    
 
 
 def p_main(p):
@@ -70,26 +70,6 @@ def p_bloque_simp(p):
     """bloque_simp : '{' bloqueE '}'
     """
 
-
-# Por si la cago otra vez en cabiarlo, aqui la dejo.
-# def p_declaracion_id(p):
-#    """declaracion_id : type ID
-#    """
-#    if not vars_table.initialized:
-#        vars_table.initialize()
-#
-#    if(isinstance(p[1], tuple)):
-#        is_array = True
-#        dope_vector = (p[1][1])
-#        p_type = p[1][0]
-#    else:
-#        is_array = False
-#        dope_vector = None
-#        p_type = p[1]
-#        
-#    vars_table.insert(p[2], p_type, is_array, dope_vector)
-
-
 def p_declaracion(p):
     """declaracion : type ID EQUAL expresion ';'
                     | type ID ';'
@@ -115,6 +95,7 @@ def p_declaracion(p):
         value = None
 
     vars_table.insert(p[2], p_type, is_array, dope_vector, value)
+    
 
 
 def p_estatuto(p):
@@ -131,6 +112,7 @@ def p_asignacion(p):
     """asignacion : ID EQUAL expresion ';'
     """
     vars_table.update_variable(p[1], p[3])
+    
 
 
 def p_condicion(p):
@@ -203,30 +185,31 @@ def p_not(p):
 def p_and(p):
     """and : AND
     """
-    push(quads.operator_stack, p[1])
 
 
 def p_or(p):
     """or : OR
     """
-    push(quads.operator_stack, p[1])
 
 
 def p_simp_oper(p):
     """simp_oper : SIMPOPER
     """
-    push(quads.operator_stack, p[1])
+    # 3. 
+    ic_generator.stackOperators.append(p[1])
 
 
 def p_comp_oper(p):
     """comp_oper : COMPOPER
     """
-    push(quads.operator_stack, p[1])
+    # 2.
+    ic_generator.stackOperators.append(p[1])
 
 def p_relop(p):
     """relop : RELOP
     """
-    push(quads.operator_stack, p[1])
+    # #?.
+    ic_generator.stackOperators.append(p[1])
 
 
 def p_expr(p):
@@ -237,6 +220,7 @@ def p_expr(p):
     p[0] = p[1]
 
 
+
 def p_exp(p):
     """exp : termino
            | termino simp_oper exp
@@ -244,6 +228,9 @@ def p_exp(p):
     # Solo regresamos primer termino, es por mientras.
     p[0] = p[1]
 
+    # ? No sale en ppt.
+    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['>', '<', '<>', '=']:
+        ic_generator.generateQuadruple()
 
 def p_termino(p):
     """termino : factor comp_oper termino
@@ -251,7 +238,10 @@ def p_termino(p):
     """
     # Solo regresamos primer factor, es por mientras.
     p[0] = p[1]
-
+    
+    # 4.
+    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['+', '-']:
+        ic_generator.generateQuadruple()
 
 def p_factor(p):
     """factor : '(' expresion ')'
@@ -261,6 +251,9 @@ def p_factor(p):
     if len(p) == 2:
         p[0] = p[1]
 
+    # 5.
+    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['*', '/']:
+        ic_generator.generateQuadruple()
 
 def p_valor(p):
     """valor : llamada
@@ -274,12 +267,23 @@ def p_valor(p):
     """
     # Solo regresamos 1 valor, es por mientras.
     p[0] = p[1]
-
+        
+        
 
 def p_id(p):
     """id : ID indice
     """
-
+    #Checamos si el id existe. Lo ponemos en stacks.
+    
+    # 1.
+    variable = vars_table.search(p[1])
+    
+    if (variable):
+        var_type = variable["type"]
+        ic_generator.stackOperands.append(p[1])
+        ic_generator.stackTypes.append(var_type)
+    else:
+        raise TypeError(f"'{p[0]}' variable not declared.") 
 
 def p_indice(p):
     """indice : '[' expresion ']'
