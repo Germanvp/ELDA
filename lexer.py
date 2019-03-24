@@ -11,7 +11,6 @@ from ply import lex
 
 literals = ['(', ')', '{', '}', ',', ':', ';', '.', '[', ']']
 
-#Definimos lista de palabras reservadas
 reserved = {
             'if': 'IF',
             'else': 'ELSE',
@@ -40,7 +39,6 @@ reserved = {
 tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'SIMPOPER', 'COMPOPER', 'RELOP'
           ] + list(reserved.values())
 
-# Los tokens mas sencillos se hacen en una linea
 t_SIMPOPER = r'\+|\-'
 t_COMPOPER = r'\*|\/'
 t_RELOP = r'\<|\>|\<\>|\<\=|\>\=|\=\='
@@ -61,11 +59,9 @@ def t_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-# t_ignore = " \t"
-
 
 def t_error(t):
-    raise TypeError("Unknown token '%s'" % (t.value[0],))
+    raise TypeError(f"Unknown token '{t.value[0]}'")
     t.lexer.skip(1)
     
 
