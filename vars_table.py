@@ -35,7 +35,7 @@ class VarsTable:
         self.current_scope = self.table["global"]
         self.initialized = True
 
-    def insert(self, var_id, var_type, is_array, dope_vector, value):
+    def insert(self, var_id, var_type, is_array, dope_vector):
         """
         Inserts a new variable of type var_type to the current scope. Raises TypeError
         if the variable was already declared.
@@ -49,27 +49,12 @@ class VarsTable:
             table_entry = {
                 "type": var_type,
                 "is_array": is_array,
-                "dope_vector": dope_vector,
-                "value": value
+                "dope_vector": dope_vector
             }
 
             self.current_scope["vars"][var_id] = table_entry
         else:
-            raise TypeError("Variable already declared '%s" % (var_id))
-
-    def update_variable(self, var_id, value):
-        """
-        Assigns a value to the given variable. Raises TypeError if the variable is not
-        declared.
-        :param var_id: The name of the variable to be updated.
-        :param value: The value to be assigned.
-        """
-        if var_id in self.current_scope["vars"]:
-            self.current_scope["vars"][var_id]["value"] = value
-        elif var_id in self.table["global"]["vars"]:
-            self.table["global"]["vars"][var_id]["value"] = value
-        else:
-            raise TypeError("Variable not declared '%s" % (var_id))
+            raise TypeError(f"Variable already declared '{var_id}'")
 
     def create_table(self, table_id, return_type):
         """

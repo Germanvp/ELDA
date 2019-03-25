@@ -7,7 +7,6 @@ Created on Thu Mar 14 17:03:27 2019
 """
 
 import parser
-import json
 
 # For parser and lexer testing, writing code on terminal
 # int a = 5; int b = 50; int funcA() { int c;} void main(){}
@@ -15,9 +14,9 @@ import json
 # int a = 5; void main(){ int b = 0; a = 7; b = 100;}
 # int a = 5; int b = 50; int funcA(int test, int test2) { int c;} void main(){}
 
-### Quadruples Tests
+# Quadruples Tests
 # int a = 1; int b = 2; int c = 3; void main() { int d = a + b * c;}
-# int a = 1; int b = 2; int c = 3; void main() { int d = a + b * c + b;}
+# int a = 1; int b = 2; int c = 3; void main() { int d = (a + b) * (c + b);}
 
 while True:
     try:

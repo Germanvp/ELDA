@@ -12,6 +12,7 @@ class Operators(Enum):
     """
     Enumeration that defines the string values for all operators
     """
+
     SUM = "+"
     SUBTRACTION = "-"
     MULTIPLICATION = "*"
@@ -21,6 +22,7 @@ class Operators(Enum):
     EQUAL = "=="
     AND = "and"
     OR = "or"
+    ASSIGN = "="
 
 
 class SemanticCube:
@@ -43,7 +45,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'bool',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'int'
                 },
                 'float': {
                     Operators.SUM: 'float',
@@ -54,7 +57,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'bool',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -65,7 +69,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -76,7 +81,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 }
             },
             'float': {
@@ -89,7 +95,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'bool',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'float': {
                     Operators.SUM: 'float',
@@ -100,7 +107,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'bool',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'float'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -111,7 +119,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -122,7 +131,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 }
             },
             'bool': {
@@ -135,7 +145,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'float': {
                     Operators.SUM: 'Error',
@@ -146,7 +157,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -157,7 +169,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'bool',
-                    Operators.OR: 'bool'
+                    Operators.OR: 'bool',
+                    Operators.ASSIGN: 'bool'
                 },
                 'string': {
                     Operators.SUM: 'Error',
@@ -168,7 +181,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 }
             },
             'string': {
@@ -181,7 +195,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'float': {
                     Operators.SUM: 'string',
@@ -192,7 +207,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -203,7 +219,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'Error',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -214,7 +231,8 @@ class SemanticCube:
                     Operators.LWR_THAN: 'Error',
                     Operators.EQUAL: 'bool',
                     Operators.AND: 'Error',
-                    Operators.OR: 'Error'
+                    Operators.OR: 'Error',
+                    Operators.ASSIGN: 'string'
                 }
             }
         }
