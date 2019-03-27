@@ -8,6 +8,10 @@ Created on Sat Mar 16 20:53:40 2019
 
 
 class VarsTable:
+    """
+    Class that manages creation and insertion of functions and variables into
+    the variable table and function directory.
+    """
 
     def __init__(self):
         self.table = None
@@ -17,15 +21,9 @@ class VarsTable:
 
     def initialize(self):
         """
-        Table es la tabla de variables
-        Parent es un apuntador a su padre
-        Current type es el tipo actual de la var/func que estamos declarando.
-        Nuestro current scope, es como un pointer. En python las variables
-        son referencias a objetos.
-
-        Entradas de tabla deben ser [id] = {type, is_array, dope_vector}
+        Initializes the variable table with the global function and sets the
+        global function as the current scope.
         """
-
         self.table = {
             "global": {
                 "type": "void",
@@ -37,36 +35,34 @@ class VarsTable:
         self.current_scope = self.table["global"]
         self.initialized = True
 
-    # Funcion que inserta una variable a la tabla.
-    def insert(self, var_id, var_type, is_array, dope_vector, value):
-        
+    def insert(self, var_id, var_type, is_array, dope_vector):
+        """
+        Inserts a new variable of type var_type to the current scope. Raises TypeError
+        if the variable was already declared.
+        :param var_id: The variable name to be inserted.
+        :param var_type: The variable type.
+        :param is_array: If the variable is an array declaration.
+        :param dope_vector: If it is an array, the dope vector states when it starts and when it ends in memory.
+        :param value: The value that is stored by the variable name.
+        """
         if var_id not in self.current_scope["vars"] and var_id not in self.table["global"]["vars"]:
             table_entry = {
                 "type": var_type,
                 "is_array": is_array,
-                "dope_vector": dope_vector,
-                "value": value
+                "dope_vector": dope_vector
             }
 
             self.current_scope["vars"][var_id] = table_entry
         else:
-            raise TypeError("Variable already declared '%s" % (var_id))
+            raise TypeError(f"Variable already declared '{var_id}'")
 
-
-    # Funcion que updetea una variable en la tabla. Sirve para asignaciones.
-    def update_variable(self, var_id, value):
-        
-        if var_id in self.current_scope["vars"]:
-            self.current_scope["vars"][var_id]["value"] = value
-        elif var_id in self.table["global"]["vars"]:
-            self.table["global"]["vars"][var_id]["value"] = value
-            
-        else:
-            raise TypeError("Variable not declared '%s" % (var_id))  
-            
-
-    ### Crea una nueva tabla. Duh. Parent es un apuntador a la tabla que la creo.
     def create_table(self, table_id, return_type):
+        """
+        Creates a new table for a function. Raises TypeError if the function is already
+        declared
+        :param table_id: The name of the function to be created.
+        :param return_type: The return type expected from the function.
+        """
         if table_id not in self.table:
             new_table = {
                 "type": return_type,
@@ -78,38 +74,24 @@ class VarsTable:
         else:
             raise TypeError("Function already declared '%s'" % (table_id))
 
-    # Busca en la tabla en la que esta o en las tablas que la contienen.
-    # Usa un aux para no tener que pasar self.current_scope en ply.
-
     def search(self, var_id):
+        """
+        Searches for the variable in the current scope and the parent.
+        :param var_id: The name of the id to be searched.
+        :return: The variable if found.
+        """
         return self.search_aux(var_id, self.current_scope)
 
-    # Namas busca recursivamente si esta en tabla actual, si no se va a la de
-    # "arriba" hasta toparse con pared o encontrarla.
-
     def search_aux(self, var_id, scope):
+        """
+        Recursively searches for the variable in the given scope, if not found, searches
+        for it in the global function.
+        :param var_id: The name of the variable to search for.
+        :param scope: The scope to search in.
+        :return: The variable if found, False otherwise.
+        """
         if scope is None:
             return 0
-
         if var_id in scope["vars"]:
             return scope["vars"][var_id]
-
         return self.search_aux(var_id, self.table["global"])
-
-##Imprimir bonito.
-#        
-# import json
-# vars_table = VarsTable()
-# vars_table.initialize()
-# vars_table.insert("a","int", 0, None)
-#
-# vars_table.create_table("main", "void")
-# vars_table.insert("b", "string", 1, (10, 100))
-#
-# vars_table.create_table("input", "string")
-# vars_table.insert("c", "string", 0, None)
-#
-# vars_table.current_scope
-#
-# vars_table.search("a")
-##print(json.dumps(vars_table.table, indent=8, sort_keys=True))
