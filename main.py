@@ -18,14 +18,23 @@ import parser
 # int a = 1; int b = 2; int c = 3; void main() { int d = a + b * c;}
 # int a = 1; int b = 2; int c = 3; void main() { int d = (a + b) * (c + b);}
 
-while True:
-    try:
-        s = input('calc > ')
-        parse = parser.parser.parse(s)
-        if parse is None:
-            print('Correct input')
-            # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
-    except TypeError as ex:
-        print(ex)
-    except EOFError:
-        break
+try:
+    name = input('File name: ')
+    with open(name, 'r') as content_file:
+        s = content_file.read()
+        if not s:
+            print('Empty file')
+        else:
+            result = parser.parser.parse(s)
+            if result is None:
+                print('File parsed correctly!')
+                pos = 1
+                for i in parser.ic_generator.quadrupleList:
+                    print(pos, repr(i))
+                    pos += 1
+                # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
+except TypeError as ex:
+    print(ex)
+except FileNotFoundError as ex:
+    print(ex)
+    print('Especifica uno de los dos archivos válidos! (correct.txt o incorrect.txt)')

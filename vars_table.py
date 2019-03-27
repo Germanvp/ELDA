@@ -94,4 +94,6 @@ class VarsTable:
             return 0
         if var_id in scope["vars"]:
             return scope["vars"][var_id]
-        return self.search_aux(var_id, self.table["global"])
+        elif var_id in self.table["global"]["vars"]:
+            return self.table["global"]["vars"][var_id]
+        raise TypeError(f"Variable {var_id} not declared")

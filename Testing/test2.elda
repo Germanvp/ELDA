@@ -1,0 +1,19 @@
+int a = 12 * (15 + 16);
+int b = 4;
+int c = 2;
+int d = 1;
+bool isAble = false;
+float fVariable = 13.45;
+
+int getValues(int param) {
+    float local = a * (b-c/d) + 12 / 13;
+    bool what = a + a * b < c / (d + 1);
+}
+
+void main() {
+    if (a*b > c) {
+        a = 12;
+    } else {
+        b = a * c;
+    }
+}

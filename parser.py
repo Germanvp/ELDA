@@ -122,11 +122,30 @@ def p_asignacion(p):
         ic_generator.generate_quadruple()
 
 
+def p_lpar_cond(p):
+    """lpar_cond : '('
+    """
+
+
+def p_rpar_cond(p):
+    """rpar_cond : ')'
+    """
+    ic_generator.generate_if_quadruple()
+
+
+def p_else(p):
+    """else : ELSE
+    """
+    ic_generator.generate_else_quadruple()
+
+
 def p_condicion(p):
-    """condicion : IF '(' expresion ')' bloque_simp
-                 | IF '(' expresion ')' bloque_simp ELSE bloque_simp
+    """condicion : IF lpar_cond expresion rpar_cond bloque_simp
+                 | IF lpar_cond expresion rpar_cond bloque_simp else bloque_simp
                  | WHEN ID '{' whencase '}' ';'
     """
+    end = ic_generator.stackJumps.pop()
+    ic_generator.fill_quadruple(end)
 
 
 def p_whencase(p):
@@ -404,7 +423,7 @@ def p_params(p):
             dope_vector = None
             p_type = p[1]
 
-        vars_table.insert(p[2], p_type, is_array, dope_vector, None)
+        vars_table.insert(p[2], p_type, is_array, dope_vector)
 
 
 def p_type(p):

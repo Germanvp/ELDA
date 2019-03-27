@@ -26,6 +26,12 @@ class Quadruple:
         self.operator = operator
         self.result = result
 
+    def __repr__(self):
+        return f"\t{self.operator}\t{self.op1}\t{self.op2}\t{self.result}"
+
+    def change_result(self, res):
+        self.result = res
+
 
 class ICG:
     """
@@ -40,6 +46,7 @@ class ICG:
         self.stackOperands = []
         self.stackTypes = []
         self.stackOperators = []
+        self.stackJumps = []
         self.semantic_cube = SemanticCube()
         self.tempCount = 0  # Para hacer variables nuevas: t1, t2...
 
@@ -70,14 +77,32 @@ class ICG:
                 # Que rara esta la palabra quadruple despues de que la lees varias veces.
                 quadruple = Quadruple(left_operand, right_operand, operator, result)
                 self.quadrupleList.append(quadruple)
-                print(operator, left_operand, right_operand, result)
+                # print(operator, left_operand, right_operand, result)
             else:
                 result = left_operand
                 quadruple = Quadruple(right_operand, None, operator, result)
                 self.quadrupleList.append(quadruple)
-                print(operator, right_operand, None, result)
+                # print(operator, right_operand, None, result)
 
             self.stackOperands.append(result)
             self.stackTypes.append(result_type)
 
+    def generate_if_quadruple(self):
+        exp_type = self.stackTypes.pop()
+        if exp_type != "bool":
+            raise TypeError(f"Conditional expressions must resolve to bool")
+        else:
+            result = self.stackOperands.pop()
+            quadruple = Quadruple(result, None, "GotoF", None)
+            self.quadrupleList.append(quadruple)
+            self.stackJumps.append(len(self.quadrupleList) - 1)
 
+    def generate_else_quadruple(self):
+        quadruple = Quadruple(None, None, "Goto", None)
+        self.quadrupleList.append(quadruple)
+        pos = self.stackJumps.pop()
+        self.stackJumps.append(len(self.quadrupleList) - 1)
+        self.fill_quadruple(pos)
+
+    def fill_quadruple(self, pos):
+        self.quadrupleList[pos].change_result(len(self.quadrupleList))
