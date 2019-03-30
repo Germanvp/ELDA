@@ -116,8 +116,18 @@ def p_equal(p):
 
 
 def p_asignacion(p):
-    """asignacion : id equal expresion ';'
+    """asignacion : ID equal expresion ';'
+                  | ID indice equal expresion ';'
     """
+    
+    variable = vars_table.search(p[1])
+
+    if variable:
+        ic_generator.stackOperands.append(p[1])
+        ic_generator.stackTypes.append(variable["type"])
+    else:
+        raise TypeError(f"'{p[1]}' variable not declared.")
+        
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
         ic_generator.generate_quadruple()
 
@@ -130,7 +140,7 @@ def p_lpar_cond(p):
 def p_rpar_cond(p):
     """rpar_cond : ')'
     """
-    ic_generator.generate_if_quadruple()
+    ic_generator.generate_gotoF()
 
 
 def p_else(p):
@@ -169,19 +179,66 @@ def p_outD(p):
             | empty
     """
 
+def p_for(p):
+    """for : FOR ID WITH rango
+    """
+    # Estamos creando nuestro iterador, hasta ahorita solo puede ser int.
+    # es el i en for i in range(x,y)
+    if not vars_table.initialized:
+        vars_table.initialize()
+    vars_table.insert(p[2], "int", False, False)
 
+    # Creamos el quadruplo de la asignacion del iterador con valor en el que empieza.
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("=")
+
+    ic_generator.generate_quadruple()
+    
+    # Crearemos la condicion para que se detenga. Solo con ints por mientras.
+    # ID < N
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("<")
+    
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperands.append(p[4])
+
+    ic_generator.generate_quadruple()
+        
+    # Genera el GotoF. Pues si verdad, que otra cosa puede hacer una funcion 
+    # que se llame generate gotoF. 
+    ic_generator.generate_gotoF()
+
+def p_while(p):
+    """while : WHILE '(' expresion ')'
+    
+    """
+    # Saca volumen de cubo.
+    ic_generator.generate_gotoF()
+    
+    
 def p_ciclo(p):
-    """ciclo : FOR ID WITH rango bloque_simp
-             | WHILE '(' expresion ')' bloque_simp
+    """ciclo : for bloque_simp
+             | while bloque_simp
 
     """
-
-
+    end = ic_generator.stackJumps.pop()
+    
+    # LLenamos el goTo que creamos para que vuelva a checar la cond. del loop.
+    ic_generator.generate_goto()
+    ic_generator.fill_goto(end)
+    
+    # Llenamos el goToF que creamos para cuando no se cumpla la condicion
+    # con la linea a la que tiene que saltar.
+    ic_generator.fill_quadruple(end)
+        
 def p_rango(p):
-    """rango : RANGE '(' expresion ',' expresion ')'
+    """rango : RANGE '(' expresion ',' INT ')'
     """
-
-
+    # Regresamos el valor maximo que puede ser el iterador del if, 
+    # esto para usarlo y crear la condicion. Ej. i < 10.
+    p[0] = p[5]
 def p_llamada(p):
     """llamada : ID '(' llamadaD ')' ';'
     """

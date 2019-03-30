@@ -1,0 +1,20 @@
+int a = 1;
+int b = 1;
+int c = 1;
+void main(){
+
+
+    while ( c < b){
+    
+    
+        for i with range(0, 100){
+        
+            a = b;
+        
+        }
+        c = 99;
+    }
+    
+    b = c;
+
+}

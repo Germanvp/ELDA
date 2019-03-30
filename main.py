@@ -20,7 +20,7 @@ import parser
 
 try:
     name = input('File name: ')
-    with open(name, 'r') as content_file:
+    with open("Testing/" + name + ".elda", 'r') as content_file:
         s = content_file.read()
         if not s:
             print('Empty file')
@@ -29,6 +29,7 @@ try:
             if result is None:
                 print('File parsed correctly!')
                 pos = 1
+                print("    operator\top1\top2\tresult")
                 for i in parser.ic_generator.quadrupleList:
                     print(pos, repr(i))
                     pos += 1
@@ -37,4 +38,4 @@ except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:
     print(ex)
-    print('Especifica uno de los dos archivos válidos! (correct.txt o incorrect.txt)')
+    print('Especifica uno de los dos archivos válidos, baboso. (correct.txt o incorrect.txt)')
