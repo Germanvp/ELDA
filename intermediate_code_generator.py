@@ -49,6 +49,9 @@ class ICG:
         self.stackJumps = []
         self.semantic_cube = SemanticCube()
         self.tempCount = 0  # Para hacer variables nuevas: t1, t2...
+        self.whenJumps = []
+        self.whenOperands = []
+        self.whenTypes = []
 
     def generate_quadruple(self):
         """
@@ -68,7 +71,7 @@ class ICG:
         operator = self.stackOperators.pop()
         operator_enum = Operators(operator)
 
-        result_type = self.semantic_cube.is_valid(left_type, right_type, operator_enum)
+        result_type = self.semantic_cube.is_valid(right_type, left_type, operator_enum)
 
         if result_type:
             if operator != "=":
@@ -82,6 +85,31 @@ class ICG:
             else:
                 result = left_operand
                 quadruple = Quadruple(right_operand, None, operator, result)
+
+            self.quadrupleList.append(quadruple)
+            self.stackOperands.append(result)
+            self.stackTypes.append(result_type)
+
+    def generate_is_quadruple(self):
+        left_operand = self.stackOperands.pop()
+        right_operand = self.whenOperands[len(self.whenOperands) - 1]
+
+        left_type = self.stackTypes.pop()
+        right_type = self.whenTypes[len(self.whenTypes) - 1]
+
+        operator = self.stackOperators.pop()
+        operator_enum = Operators(operator)
+
+        result_type = self.semantic_cube.is_valid(right_type, left_type, operator_enum)
+
+        if result_type:
+            # Hacer la nueva variable tN.
+            self.tempCount = self.tempCount + 1
+            result = "t" + str(self.tempCount)
+
+            # Hacemos el quadruple y lo ponemos en la lista de quadruples.
+            # Que rara esta la palabra quadruple despues de que la lees varias veces.
+            quadruple = Quadruple(right_operand, left_operand, operator, result)
 
             self.quadrupleList.append(quadruple)
             self.stackOperands.append(result)

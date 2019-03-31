@@ -102,6 +102,7 @@ def p_declaracion(p):
 def p_estatuto(p):
     """estatuto : asignacion
                 | condicion
+                | when
                 | in
                 | out
                 | ciclo
@@ -149,19 +150,58 @@ def p_else(p):
     ic_generator.generate_else_quadruple()
 
 
-def p_condicion(p):
-    """condicion : IF lpar_cond expresion rpar_cond bloque_simp
-                 | IF lpar_cond expresion rpar_cond bloque_simp else bloque_simp
-                 | WHEN ID '{' whencase '}' ';'
+def p_when_id(p):
+    """when_id : ID
     """
-    end = ic_generator.stackJumps.pop()
-    ic_generator.fill_quadruple(end)
+    variable = vars_table.search(p[1])
+
+    if variable:
+        ic_generator.whenOperands.append(p[1])
+        ic_generator.whenTypes.append(variable["type"])
+    else:
+        raise TypeError(f"'{p[1]}' variable not declared.")
+
+
+def p_when(p):
+    """when : WHEN when_id '{' whencase '}'
+    """
+    for i in ic_generator.whenJumps:
+        ic_generator.quadrupleList[i].change_result(len(ic_generator.quadrupleList) + 1)
+    ic_generator.fill_quadruple(ic_generator.stackJumps.pop())
+    ic_generator.whenJumps.clear()
+    ic_generator.whenOperands.pop()
+    ic_generator.whenTypes.pop()
+
+
+def p_when_is(p):
+    """when_is : IS valor
+    """
+    if len(ic_generator.whenJumps) > 0:
+        ic_generator.fill_quadruple(ic_generator.stackJumps.pop())
+    ic_generator.stackOperators.append("==")
+    ic_generator.generate_is_quadruple()
+    ic_generator.generate_gotoF()
+
+
+def p_case(p):
+    """case : when_is bloque_simp
+    """
+    ic_generator.generate_goto()
+    ic_generator.whenJumps.append(len(ic_generator.quadrupleList) - 1)
 
 
 def p_whencase(p):
-    """ whencase : IS valor ':' bloque_simp whencase
+    """whencase : case whencase
                  | empty
     """
+
+
+def p_condicion(p):
+    """condicion : IF lpar_cond expresion rpar_cond bloque_simp
+                 | IF lpar_cond expresion rpar_cond bloque_simp else bloque_simp
+    """
+    end = ic_generator.stackJumps.pop()
+    ic_generator.fill_quadruple(end)
 
 
 def p_in(p):

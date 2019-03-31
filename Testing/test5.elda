@@ -1,0 +1,25 @@
+int i = 1;
+
+float a = 0.0;
+float b = 0.0;
+float c = 0.0;
+float d = 0.0;
+
+void main() {
+    when i {
+        is 1 {
+            a = b * c;
+            when a {
+                is 1.0 {
+                    b = d + 1;
+                }
+            }
+        }
+        is 2 {
+            b = c / d;
+        }
+        is 3 {
+            d = (a + c) * d;
+        }
+    }
+}
