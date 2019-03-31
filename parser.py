@@ -175,9 +175,13 @@ def p_out(p):
 
 
 def p_outD(p):
-    """outD : expresion ',' outD
+    """outD : expresion
+            | expresion ',' outD
             | empty
     """
+    ic_generator.stackOperators.append("out")
+    ic_generator.generate_out_quadruple()
+
 
 def p_for(p):
     """for : FOR ID WITH rango
@@ -194,7 +198,24 @@ def p_for(p):
     ic_generator.stackOperators.append("=")
 
     ic_generator.generate_quadruple()
-    
+
+    # Creamos el quadruplo de la suma del iterador mas 1.
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperands.append(1)
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("+")
+
+    ic_generator.generate_quadruple()
+
+    ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
+
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("=")
+
+    ic_generator.generate_quadruple()
+
     # Crearemos la condicion para que se detenga. Solo con ints por mientras.
     # ID < N
     ic_generator.stackOperands.append(p[2])
@@ -210,8 +231,17 @@ def p_for(p):
     # que se llame generate gotoF. 
     ic_generator.generate_gotoF()
 
+
+def p_while_keyword(p):
+    """while_keyword : WHILE
+    """
+    # Para reconocer el salto correcto en el que se realizan todos los calculos
+    # y luego se evalua la condicion.
+    ic_generator.stackJumps.append(len(ic_generator.quadrupleList) + 1)
+
+
 def p_while(p):
-    """while : WHILE '(' expresion ')'
+    """while : while_keyword '(' expresion ')'
     
     """
     # Saca volumen de cubo.
@@ -224,10 +254,11 @@ def p_ciclo(p):
 
     """
     end = ic_generator.stackJumps.pop()
+    revisit = ic_generator.stackJumps.pop()
     
     # LLenamos el goTo que creamos para que vuelva a checar la cond. del loop.
     ic_generator.generate_goto()
-    ic_generator.fill_goto(end)
+    ic_generator.fill_goto(revisit)
     
     # Llenamos el goToF que creamos para cuando no se cumpla la condicion
     # con la linea a la que tiene que saltar.
