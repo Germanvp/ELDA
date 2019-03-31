@@ -102,6 +102,7 @@ def p_declaracion(p):
 def p_estatuto(p):
     """estatuto : asignacion
                 | condicion
+                | when
                 | in
                 | out
                 | ciclo
@@ -116,23 +117,91 @@ def p_equal(p):
 
 
 def p_asignacion(p):
-    """asignacion : id equal expresion ';'
+    """asignacion : ID equal expresion ';'
+                  | ID indice equal expresion ';'
     """
+    
+    variable = vars_table.search(p[1])
+
+    if variable:
+        ic_generator.stackOperands.append(p[1])
+        ic_generator.stackTypes.append(variable["type"])
+    else:
+        raise TypeError(f"'{p[1]}' variable not declared.")
+        
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
         ic_generator.generate_quadruple()
 
 
-def p_condicion(p):
-    """condicion : IF '(' expresion ')' bloque_simp
-                 | IF '(' expresion ')' bloque_simp ELSE bloque_simp
-                 | WHEN ID '{' whencase '}' ';'
+def p_lpar_cond(p):
+    """lpar_cond : '('
     """
+
+
+def p_rpar_cond(p):
+    """rpar_cond : ')'
+    """
+    ic_generator.generate_gotoF()
+
+
+def p_else(p):
+    """else : ELSE
+    """
+    ic_generator.generate_else_quadruple()
+
+
+def p_when_id(p):
+    """when_id : ID
+    """
+    variable = vars_table.search(p[1])
+
+    if variable:
+        ic_generator.whenOperands.append(p[1])
+        ic_generator.whenTypes.append(variable["type"])
+    else:
+        raise TypeError(f"'{p[1]}' variable not declared.")
+
+
+def p_when(p):
+    """when : WHEN when_id '{' whencase '}'
+    """
+    for i in ic_generator.whenJumps:
+        ic_generator.quadrupleList[i].change_result(len(ic_generator.quadrupleList) + 1)
+    ic_generator.fill_quadruple(ic_generator.stackJumps.pop())
+    ic_generator.whenJumps.clear()
+    ic_generator.whenOperands.pop()
+    ic_generator.whenTypes.pop()
+
+
+def p_when_is(p):
+    """when_is : IS valor
+    """
+    if len(ic_generator.whenJumps) > 0:
+        ic_generator.fill_quadruple(ic_generator.stackJumps.pop())
+    ic_generator.stackOperators.append("==")
+    ic_generator.generate_is_quadruple()
+    ic_generator.generate_gotoF()
+
+
+def p_case(p):
+    """case : when_is bloque_simp
+    """
+    ic_generator.generate_goto()
+    ic_generator.whenJumps.append(len(ic_generator.quadrupleList) - 1)
 
 
 def p_whencase(p):
-    """ whencase : IS valor ':' bloque_simp whencase
+    """whencase : case whencase
                  | empty
     """
+
+
+def p_condicion(p):
+    """condicion : IF lpar_cond expresion rpar_cond bloque_simp
+                 | IF lpar_cond expresion rpar_cond bloque_simp else bloque_simp
+    """
+    end = ic_generator.stackJumps.pop()
+    ic_generator.fill_quadruple(end)
 
 
 def p_in(p):
@@ -146,23 +215,101 @@ def p_out(p):
 
 
 def p_outD(p):
-    """outD : expresion ',' outD
+    """outD : expresion
+            | expresion ',' outD
             | empty
     """
+    ic_generator.stackOperators.append("out")
+    ic_generator.generate_out_quadruple()
 
 
+def p_for(p):
+    """for : FOR ID WITH rango
+    """
+    # Estamos creando nuestro iterador, hasta ahorita solo puede ser int.
+    # es el i en for i in range(x,y)
+    if not vars_table.initialized:
+        vars_table.initialize()
+    vars_table.insert(p[2], "int", False, False)
+
+    # Creamos el quadruplo de la asignacion del iterador con valor en el que empieza.
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("=")
+
+    ic_generator.generate_quadruple()
+
+    # Creamos el quadruplo de la suma del iterador mas 1.
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperands.append(1)
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("+")
+
+    ic_generator.generate_quadruple()
+
+    ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
+
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("=")
+
+    ic_generator.generate_quadruple()
+
+    # Crearemos la condicion para que se detenga. Solo con ints por mientras.
+    # ID < N
+    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("<")
+    
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperands.append(p[4])
+
+    ic_generator.generate_quadruple()
+        
+    # Genera el GotoF. Pues si verdad, que otra cosa puede hacer una funcion 
+    # que se llame generate gotoF. 
+    ic_generator.generate_gotoF()
+
+
+def p_while_keyword(p):
+    """while_keyword : WHILE
+    """
+    # Para reconocer el salto correcto en el que se realizan todos los calculos
+    # y luego se evalua la condicion.
+    ic_generator.stackJumps.append(len(ic_generator.quadrupleList) + 1)
+
+
+def p_while(p):
+    """while : while_keyword '(' expresion ')'
+    
+    """
+    # Saca volumen de cubo.
+    ic_generator.generate_gotoF()
+    
+    
 def p_ciclo(p):
-    """ciclo : FOR ID WITH rango bloque_simp
-             | WHILE '(' expresion ')' bloque_simp
+    """ciclo : for bloque_simp
+             | while bloque_simp
 
     """
-
-
+    end = ic_generator.stackJumps.pop()
+    revisit = ic_generator.stackJumps.pop()
+    
+    # LLenamos el goTo que creamos para que vuelva a checar la cond. del loop.
+    ic_generator.generate_goto()
+    ic_generator.fill_goto(revisit)
+    
+    # Llenamos el goToF que creamos para cuando no se cumpla la condicion
+    # con la linea a la que tiene que saltar.
+    ic_generator.fill_quadruple(end)
+        
 def p_rango(p):
-    """rango : RANGE '(' expresion ',' expresion ')'
+    """rango : RANGE '(' expresion ',' INT ')'
     """
-
-
+    # Regresamos el valor maximo que puede ser el iterador del if, 
+    # esto para usarlo y crear la condicion. Ej. i < 10.
+    p[0] = p[5]
 def p_llamada(p):
     """llamada : ID '(' llamadaD ')' ';'
     """
@@ -404,7 +551,7 @@ def p_params(p):
             dope_vector = None
             p_type = p[1]
 
-        vars_table.insert(p[2], p_type, is_array, dope_vector, None)
+        vars_table.insert(p[2], p_type, is_array, dope_vector)
 
 
 def p_type(p):

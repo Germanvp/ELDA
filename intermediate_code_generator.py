@@ -26,6 +26,12 @@ class Quadruple:
         self.operator = operator
         self.result = result
 
+    def __repr__(self):
+        return f"\t{self.operator}\t{self.op1}\t{self.op2}\t{self.result}"
+
+    def change_result(self, res):
+        self.result = res
+
 
 class ICG:
     """
@@ -40,8 +46,12 @@ class ICG:
         self.stackOperands = []
         self.stackTypes = []
         self.stackOperators = []
+        self.stackJumps = []
         self.semantic_cube = SemanticCube()
         self.tempCount = 0  # Para hacer variables nuevas: t1, t2...
+        self.whenJumps = []
+        self.whenOperands = []
+        self.whenTypes = []
 
     def generate_quadruple(self):
         """
@@ -49,11 +59,14 @@ class ICG:
         then generates the temporal variable and adds it to the result if appropriate. If no
         TypeError is risen, the quadruple is generated and added to the list
         """
-        right_operand = self.stackOperands.pop()
-        left_operand = self.stackOperands.pop()
 
-        right_type = self.stackTypes.pop()
+        # Right y left los puse invertidos, al rato lo cambio.
+        # Osea solo los nombres, nos puede causar confusion despues.
+        left_operand = self.stackOperands.pop()
+        right_operand = self.stackOperands.pop()
+
         left_type = self.stackTypes.pop()
+        right_type = self.stackTypes.pop()
 
         operator = self.stackOperators.pop()
         operator_enum = Operators(operator)
@@ -68,16 +81,74 @@ class ICG:
 
                 # Hacemos el quadruple y lo ponemos en la lista de quadruples.
                 # Que rara esta la palabra quadruple despues de que la lees varias veces.
-                quadruple = Quadruple(left_operand, right_operand, operator, result)
-                self.quadrupleList.append(quadruple)
-                print(operator, left_operand, right_operand, result)
+                quadruple = Quadruple(right_operand, left_operand, operator, result)
             else:
                 result = left_operand
                 quadruple = Quadruple(right_operand, None, operator, result)
-                self.quadrupleList.append(quadruple)
-                print(operator, right_operand, None, result)
 
+            self.quadrupleList.append(quadruple)
             self.stackOperands.append(result)
             self.stackTypes.append(result_type)
 
+    def generate_is_quadruple(self):
+        left_operand = self.stackOperands.pop()
+        right_operand = self.whenOperands[len(self.whenOperands) - 1]
 
+        left_type = self.stackTypes.pop()
+        right_type = self.whenTypes[len(self.whenTypes) - 1]
+
+        operator = self.stackOperators.pop()
+        operator_enum = Operators(operator)
+
+        result_type = self.semantic_cube.is_valid(right_type, left_type, operator_enum)
+
+        if result_type:
+            # Hacer la nueva variable tN.
+            self.tempCount = self.tempCount + 1
+            result = "t" + str(self.tempCount)
+
+            # Hacemos el quadruple y lo ponemos en la lista de quadruples.
+            # Que rara esta la palabra quadruple despues de que la lees varias veces.
+            quadruple = Quadruple(right_operand, left_operand, operator, result)
+
+            self.quadrupleList.append(quadruple)
+            self.stackOperands.append(result)
+            self.stackTypes.append(result_type)
+
+    def generate_out_quadruple(self):
+        result = self.stackOperands.pop()
+        self.stackTypes.pop()
+
+        operator = self.stackOperators.pop()
+
+        quadruple = Quadruple(None, None, operator, result)
+
+        self.quadrupleList.append(quadruple)
+
+    def generate_gotoF(self):
+        exp_type = self.stackTypes.pop()
+        if exp_type != "bool":
+            raise TypeError(f"Conditional expressions must resolve to bool")
+        else:
+            result = self.stackOperands.pop()
+            quadruple = Quadruple(result, None, "GotoF", None)
+            self.quadrupleList.append(quadruple)
+            self.stackJumps.append(len(self.quadrupleList) - 1)
+
+    def generate_goto(self):
+        quadruple = Quadruple(None, None, "Goto", None)
+        self.quadrupleList.append(quadruple)
+
+    def fill_goto(self, result):
+        pos = len(self.quadrupleList) - 1
+        self.quadrupleList[pos].change_result(result)
+
+    def generate_else_quadruple(self):
+        quadruple = Quadruple(None, None, "Goto", None)
+        self.quadrupleList.append(quadruple)
+        pos = self.stackJumps.pop()
+        self.stackJumps.append(len(self.quadrupleList) - 1)
+        self.fill_quadruple(pos)
+
+    def fill_quadruple(self, pos):
+        self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)

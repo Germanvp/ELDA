@@ -1,0 +1,38 @@
+float a = 1.0;
+float b = 1.0;
+float c = 1.0;
+float d = 1.0;
+float e = 1.0;
+float f = 1.0;
+float g = 1.0;
+float h = 1.0;
+float i = 1.0;
+float j = 1.0;
+float k = 1.0;
+
+
+void main(){
+
+    a = b + c * (d - e / f) * h;
+    b = e - f;
+    
+    while ( a * b - c > d * e / (g + h)){
+        h = j * k + b;
+        if ( b < h){
+            b = h + j;
+            
+            while ( b > a + c){
+                b = b - j;            
+            
+            }
+
+        } else {
+            a = a + b;
+
+        
+        }
+
+    
+    }
+    f = a + b;
+}

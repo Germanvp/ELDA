@@ -45,7 +45,7 @@ t_RELOP = r'\<|\>|\<\>|\<\=|\>\=|\=\='
 t_EQUAL = r'\='
 t_INT = r'\d+'
 t_FLOAT = r'([0-9])+\.([0-9])*'
-t_STRING = r'"\w*"'
+t_STRING = r'"[a-zA-Z0-9_\s]*"'
 t_ignore_SPACE = r'(\s|\n|\r)+'
 
 
