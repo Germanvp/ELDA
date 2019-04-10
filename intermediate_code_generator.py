@@ -49,6 +49,7 @@ class ICG:
         self.stackJumps = []
         self.semantic_cube = SemanticCube()
         self.tempCount = 0  # Para hacer variables nuevas: t1, t2...
+        self.paramCount = 0 # Para contar cuantos parametros llevamos. Antes de la llamada.
         self.whenJumps = []
         self.whenOperands = []
         self.whenTypes = []
@@ -139,9 +140,6 @@ class ICG:
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
 
-    def fill_goto(self, result):
-        pos = len(self.quadrupleList) - 1
-        self.quadrupleList[pos].change_result(result)
 
     def generate_else_quadruple(self):
         quadruple = Quadruple(None, None, "Goto", None)
@@ -149,6 +147,47 @@ class ICG:
         pos = self.stackJumps.pop()
         self.stackJumps.append(len(self.quadrupleList) - 1)
         self.fill_quadruple(pos)
+        
+    def generate_param_quadruple(self, param):
+        # Checamos si es un id, string o un solo numero
+        # Si no es ninguna de esas es por que es una expresion y tenemos
+        # que asignar el ultimo temporal.
+        
+        if(len(param) == 1 or (param[0] == '"' and param[-1] == '"')):
+            quadruple = Quadruple(None, None, "param", param)
+        else:
+            temp = self.quadrupleList[-1].result
+            quadruple = Quadruple(None, None, "param", temp)
+            
+        self.quadrupleList.append(quadruple)
+        self.paramCount = self.paramCount + 1
+        
+    def generate_function_call(self, func, return_type):       
+        # Hacer la nueva variable tN.
+        
+        # Si es void entonces no hay necesidad de hacer temporal ni poner
+        # un resultado. 
+        if return_type != "void":
+            self.tempCount = self.tempCount + 1
+            result = "t" + str(self.tempCount)
+            print(result, return_type)
+
+            self.stackOperands.append(result)
+            self.stackTypes.append(return_type)
+        else:
+            result = None
+            
+        # Generamos el quadruplo, ejemplo t3 = call f 
+        # Donde N es el numero de parametros que toma la funcion.
+        quadruple = Quadruple(func + "()", self.paramCount, "=", result)
+        self.quadrupleList.append(quadruple)
+        
+        # Reiniciamos el contador de parametros.
+        self.paramCount = 0
+        
+    def fill_goto(self, result):
+        pos = len(self.quadrupleList) - 1
+        self.quadrupleList[pos].change_result(result)
 
     def fill_quadruple(self, pos):
         self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)

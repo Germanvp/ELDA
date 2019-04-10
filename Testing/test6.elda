@@ -1,0 +1,16 @@
+int a = 0;
+
+int func(int i, int j, int k) {
+    int b = 2;
+}
+
+void winter(string p){
+    p = "Winter is Here";
+}
+
+void main() {
+    int p = func(3+5, a, 5);
+    winter("Heho");
+    func(3+4, a + 1+ 5, 5);
+    a = 2;
+}

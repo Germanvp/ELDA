@@ -7,6 +7,7 @@ Created on Thu Mar 14 17:03:27 2019
 """
 
 import parser
+import json
 
 # For parser and lexer testing, writing code on terminal
 # int a = 5; int b = 50; int funcA() { int c;} void main(){}
@@ -33,7 +34,7 @@ try:
                 for i in parser.ic_generator.quadrupleList:
                     print(pos, repr(i))
                     pos += 1
-                # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
+                #print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
 except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:

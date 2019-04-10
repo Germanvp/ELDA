@@ -106,7 +106,7 @@ def p_estatuto(p):
                 | in
                 | out
                 | ciclo
-                | llamada
+                | llamada ';'
     """
 
 
@@ -117,8 +117,7 @@ def p_equal(p):
 
 
 def p_asignacion(p):
-    """asignacion : ID equal expresion ';'
-                  | ID indice equal expresion ';'
+    """asignacion : id equal expresion ';'
     """
     
     variable = vars_table.search(p[1])
@@ -310,16 +309,36 @@ def p_rango(p):
     # Regresamos el valor maximo que puede ser el iterador del if, 
     # esto para usarlo y crear la condicion. Ej. i < 10.
     p[0] = p[5]
+    
 def p_llamada(p):
-    """llamada : ID '(' llamadaD ')' ';'
+    """llamada : ID '(' llamadaD ')'
     """
+    if not vars_table.initialized:
+        vars_table.initialize()
+        
+    if p[1] in vars_table.table:
+        # Que tipo regresa la funcion.
+        return_type = vars_table.table[p[1]]["type"]
+        
+        ic_generator.generate_function_call(p[1], return_type)
+    else:         
+        raise TypeError(f"'{p[1]}' function not declared.")
+        
+    p[0] = ic_generator.quadrupleList[-1].result
 
-
+    
+# Expresion para que se puedan guardar los parametros como parametros, duh.
+def p_expresionL(p):
+    """expresionL : expresion
+    
+    """
+    ic_generator.generate_param_quadruple(p[1])
+    
 def p_llamadaD(p):
-    """llamadaD : expresion ',' llamadaD
+    """llamadaD : expresionL ',' llamadaD
+                | expresionL
                 | empty
     """
-
 
 def p_expresion(p):
     """expresion : not expr
@@ -394,7 +413,10 @@ def p_expr(p):
             | exp relop exp
     """
     # Solo regresamos primera expresion, es por mientras.
-    p[0] = p[1]
+    if (len(p) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['or', 'and']:
         ic_generator.generate_quadruple()
@@ -405,7 +427,10 @@ def p_exp(p):
            | termino simp_oper exp
     """
     # Solo regresamos primer termino, es por mientras.
-    p[0] = p[1]
+    if (len(p) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
     # ? No sale en ppt.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['>', '<', '<>', '==', '<=', '>=']:
@@ -417,7 +442,10 @@ def p_termino(p):
                 | factor
     """
     # Solo regresamos primer factor, es por mientras.
-    p[0] = p[1]
+    if (len(p) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
     # 4.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['+', '-']:
@@ -429,8 +457,10 @@ def p_factor(p):
               | valor
     """
     # Solo regresamos si es valor, es por mientras.
-    if len(p) == 2:
+    if (len(p) == 2):
         p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
     # 5.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['*', '/']:
@@ -482,7 +512,6 @@ def p_valor(p):
     # Solo regresamos 1 valor, es por mientras.
     p[0] = p[1]
 
-
 def p_id(p):
     """id : ID indice
     """
@@ -494,6 +523,7 @@ def p_id(p):
     if variable:
         ic_generator.stackOperands.append(p[1])
         ic_generator.stackTypes.append(variable["type"])
+        p[0] = p[1]
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
 
@@ -554,13 +584,19 @@ def p_params(p):
         vars_table.insert(p[2], p_type, is_array, dope_vector)
 
 
-def p_type(p):
-    """type : TYPE_BOOL
+def p_typeA(p):
+    """typeA : TYPE_BOOL
             | TYPE_FLOAT
             | TYPE_INT
             | TYPE_STRING
-            | type '[' INT ']'
-            | type '[' INT ']' '[' INT ']'
+    """
+    p[0] = p[1]
+    
+def p_type(p):
+    """type : typeA
+            | typeA '[' INT ']' '[' INT ']'
+            | typeA '[' INT ']'
+
     """
     if len(p) == 2:
         p[0] = p[1]
@@ -571,7 +607,14 @@ def p_type(p):
 
 
 def p_error(p):
-    raise TypeError(f"Unknown literal '{p.value}'")
+    # get formatted representation of stack
+    if p == None:
+        token = "end of file"
+    else:
+        print(p)
+        token = f"{p.type}({p.value}) on line {p.lineno}"
+
+    raise TypeError(f"Syntax error: Unexpected {token}")
 
 
 parser = yacc.yacc(start='program')
