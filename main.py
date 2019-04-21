@@ -39,4 +39,4 @@ except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:
     print(ex)
-    print('Especifica uno de los dos archivos válidos, baboso. (correct.txt o incorrect.txt)')
+    print(f"File '{name}' not found")
