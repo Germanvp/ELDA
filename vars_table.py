@@ -35,7 +35,7 @@ class VarsTable:
         self.current_scope = self.table["global"]
         self.initialized = True
 
-    def insert(self, var_id, var_type, is_array, dope_vector):
+    def insert(self, var_id, var_type, is_array, dope_vector, address):
         """
         Inserts a new variable of type var_type to the current scope. Raises TypeError
         if the variable was already declared.
@@ -43,13 +43,13 @@ class VarsTable:
         :param var_type: The variable type.
         :param is_array: If the variable is an array declaration.
         :param dope_vector: If it is an array, the dope vector states when it starts and when it ends in memory.
-        :param value: The value that is stored by the variable name.
         """
         if var_id not in self.current_scope["vars"] and var_id not in self.table["global"]["vars"]:
             table_entry = {
                 "type": var_type,
                 "is_array": is_array,
-                "dope_vector": dope_vector
+                "dope_vector": dope_vector,
+                "address": address
             }
 
             self.current_scope["vars"][var_id] = table_entry
@@ -72,7 +72,7 @@ class VarsTable:
             self.table[table_id] = new_table
             self.current_scope = self.table[table_id]
         else:
-            raise TypeError("Function already declared '%s'" % (table_id))
+            raise TypeError("Function already declared '%s'" % table_id)
 
     def search(self, var_id):
         """

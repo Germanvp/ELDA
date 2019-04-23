@@ -5,9 +5,9 @@ class MainMemory:
 
     def __init__(self):
         self.base_global = 5000
-        self.base_execution = 20000
-        self.base_temp = 65000
-        self.base_constants = 80000
+        self.base_temp = 20000
+        self.base_constants = 35000
+        self.base_execution = 50000
 
         self.int_start = 0
         self.float_start = 5000
@@ -39,6 +39,8 @@ class MainMemory:
     def add_scope(self, size):
         new_scope = VirtualMemory(self, size)
 
+        if self.counter_execution + size > self.base_execution + 45000:
+            raise TypeError(f"Stack Overflow: The execution stack was filled.")
         address = self.base_execution + self.counter_execution
         self.counter_execution = self.counter_execution + size
 

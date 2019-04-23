@@ -29,12 +29,15 @@ def p_program(p):
                | main
     """
 
-
 def p_main_id(p):
     """main_id : void MAIN
     """
     if not vars_table.initialized:
         vars_table.initialize()
+
+    ic_generator.reset_bases()
+    if vars_table.current_scope is not vars_table.table["global"]:
+        del vars_table.current_scope["vars"]
 
     vars_table.create_table(p[2], p[1])
 
@@ -42,6 +45,9 @@ def p_main_id(p):
 def p_main(p):
     """main : main_id '(' ')' bloque
     """
+    ic_generator.reset_bases()
+    del vars_table.current_scope["vars"]
+    del vars_table.table["global"]["vars"]
 
 
 def p_bloque(p):
@@ -90,9 +96,14 @@ def p_declaracion(p):
         dope_vector = None
         p_type = p[1]
 
-    vars_table.insert(p[2], p_type, is_array, dope_vector)
+    if vars_table.current_scope is vars_table.table["global"]:
+        address = ic_generator.get_memory_address("global", p_type)
+    else:
+        address = ic_generator.get_memory_address("local", p_type)
 
-    ic_generator.stackOperands.append(p[2])
+    vars_table.insert(p[2], p_type, is_array, dope_vector, address)
+
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append(p_type)
 
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
@@ -123,7 +134,7 @@ def p_asignacion(p):
     variable = vars_table.search(p[1])
 
     if variable:
-        ic_generator.stackOperands.append(p[1])
+        ic_generator.stackOperands.append(variable["address"])
         ic_generator.stackTypes.append(variable["type"])
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
@@ -155,7 +166,7 @@ def p_when_id(p):
     variable = vars_table.search(p[1])
 
     if variable:
-        ic_generator.whenOperands.append(p[1])
+        ic_generator.whenOperands.append(variable["address"])
         ic_generator.whenTypes.append(variable["type"])
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
@@ -229,19 +240,24 @@ def p_for(p):
     # es el i en for i in range(x,y)
     if not vars_table.initialized:
         vars_table.initialize()
-    vars_table.insert(p[2], "int", False, False)
+
+    address = ic_generator.get_memory_address("local", "int")
+    vars_table.insert(p[2], "int", False, False, address)
 
     # Creamos el quadruplo de la asignacion del iterador con valor en el que empieza.
-    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("=")
 
     ic_generator.generate_quadruple()
 
     # Creamos el quadruplo de la suma del iterador mas 1.
-    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
-    ic_generator.stackOperands.append(1)
+
+    const_address = ic_generator.get_memory_address("constants", "int", 1)
+
+    ic_generator.stackOperands.append(const_address)
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("+")
 
@@ -249,7 +265,7 @@ def p_for(p):
 
     ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
 
-    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("=")
 
@@ -257,12 +273,14 @@ def p_for(p):
 
     # Crearemos la condicion para que se detenga. Solo con ints por mientras.
     # ID < N
-    ic_generator.stackOperands.append(p[2])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("<")
-    
+
+    const_address = ic_generator.get_memory_address("constants", "int", p[4])
+
     ic_generator.stackTypes.append("int")
-    ic_generator.stackOperands.append(p[4])
+    ic_generator.stackOperands.append(const_address)
 
     ic_generator.generate_quadruple()
         
@@ -413,7 +431,7 @@ def p_expr(p):
             | exp relop exp
     """
     # Solo regresamos primera expresion, es por mientras.
-    if (len(p) == 2):
+    if len(p) == 2:
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -427,7 +445,7 @@ def p_exp(p):
            | termino simp_oper exp
     """
     # Solo regresamos primer termino, es por mientras.
-    if (len(p) == 2):
+    if len(p) == 2:
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -471,7 +489,8 @@ def p_constant_i(p):
     """constant_i : INT
     """
     p[0] = p[1]
-    ic_generator.stackOperands.append(p[1])
+    address = ic_generator.get_memory_address("constants", "int", p[1])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
 
 
@@ -479,7 +498,8 @@ def p_constant_f(p):
     """constant_f : FLOAT
     """
     p[0] = p[1]
-    ic_generator.stackOperands.append(p[1])
+    address = ic_generator.get_memory_address("constants", "float", p[1])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("float")
 
 
@@ -488,7 +508,8 @@ def p_constant_b(p):
                   | FALSE
     """
     p[0] = p[1]
-    ic_generator.stackOperands.append(p[1])
+    address = ic_generator.get_memory_address("constants", "bool", p[1])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("bool")
 
 
@@ -496,7 +517,8 @@ def p_constant_s(p):
     """constant_s : STRING
     """
     p[0] = p[1]
-    ic_generator.stackOperands.append(p[1])
+    address = ic_generator.get_memory_address("constants", "string", p[1])
+    ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("string")
 
 
@@ -521,7 +543,7 @@ def p_id(p):
     variable = vars_table.search(p[1])
 
     if variable:
-        ic_generator.stackOperands.append(p[1])
+        ic_generator.stackOperands.append(variable["address"])
         ic_generator.stackTypes.append(variable["type"])
         p[0] = p[1]
     else:
@@ -550,6 +572,9 @@ def p_funcion_id(p):
     """funcion_id : type ID
                   | void ID
     """
+    ic_generator.reset_bases()
+    if vars_table.current_scope is not vars_table.table["global"]:
+        del vars_table.current_scope["vars"]
     vars_table.create_table(p[2], p[1])
 
 
@@ -581,7 +606,8 @@ def p_params(p):
             dope_vector = None
             p_type = p[1]
 
-        vars_table.insert(p[2], p_type, is_array, dope_vector)
+        address = ic_generator.get_memory_address("local", "int")
+        vars_table.insert(p[2], p_type, is_array, dope_vector, address)
 
 
 def p_typeA(p):

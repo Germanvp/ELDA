@@ -49,10 +49,95 @@ class ICG:
         self.stackJumps = []
         self.semantic_cube = SemanticCube()
         self.tempCount = 0  # Para hacer variables nuevas: t1, t2...
-        self.paramCount = 0 # Para contar cuantos parametros llevamos. Antes de la llamada.
+        self.paramCount = 0  # Para contar cuantos parametros llevamos. Antes de la llamada.
         self.whenJumps = []
         self.whenOperands = []
         self.whenTypes = []
+
+        self.constants = {}
+
+        self.base_global = 5000
+        self.base_local = 20000
+        self.base_constants = 35000
+
+        self.int_start = 0
+        self.float_start = 5000
+        self.string_start = 10000
+        self.bool_start = 12500
+
+        self.global_counters = [0, 0, 0, 0]
+        self.local_counters = [0, 0, 0, 0]
+        self.constant_counters = [0, 0, 0, 0]
+
+    def reset_bases(self):
+        self.local_counters = [0, 0, 0, 0]
+
+    def get_memory_address(self, memory_type, var_type, value=None):
+        """
+        Inserta variable en memoria y regresa su direccion para que la puedas
+        poner en la tabla de variables.
+        """
+        # Dependiendo de que tipo sea la variable
+        # Type start es donde debe empezar el tipo...
+        # Type end es donde debe acabar el tipo...
+        if var_type == "int":
+            type_start = self.int_start
+            type_end = self.float_start - 1
+            counter = 0
+        elif var_type == "float":
+            type_start = self.float_start
+            type_end = self.string_start - 1
+            counter = 1
+        elif var_type == "string":
+            type_start = self.string_start
+            type_end = self.bool_start - 1
+            counter = 2
+        elif var_type == "bool":
+            type_start = self.bool_start
+            type_end = 14999
+            counter = 3
+        else:
+            raise TypeError(f"Unknown type '{var_type}'")
+
+        # Checamos que tipo de memoria es.
+        # Y asignamos la direccion: Base + base_de_tipo + sig del tipo
+        if memory_type == "global":
+            address = self.base_global + type_start + self.global_counters[counter]
+
+            if address > self.base_global + type_end:
+                raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
+            self.global_counters[counter] += 1
+        elif memory_type == "local":
+            address = self.base_local + type_start + self.local_counters[counter]
+
+            if address > self.base_local + type_end:
+                raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
+            self.local_counters[counter] += 1
+        elif memory_type == "constants":
+            if value is None:
+                raise TypeError(f"Value must be specified for constants")
+            elif value in self.constants.values():
+                return [k for k, v in self.constants.items() if v == value].pop()
+            address = self.base_constants + type_start + self.constant_counters[counter]
+
+            if address > self.base_constants + type_end:
+                raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
+            print(address, value)
+            self.constants[address] = value
+            self.constant_counters[counter] += 1
+        else:
+            raise TypeError(f"Unknown memory '{memory_type}'")
+
+        # if type_start is self.int_start:
+        #     self.int_start += 1
+        # elif type_start is self.float_start:
+        #     self.float_start += 1
+        # elif type_start is self.string_start:
+        #     self.string_start += 1
+        # else:
+        #     self.bool_start += 1
+
+        return address
 
     def generate_quadruple(self):
         """
@@ -76,9 +161,8 @@ class ICG:
 
         if result_type:
             if operator != "=":
-                # Hacer la nueva variable tN.
-                self.tempCount = self.tempCount + 1
-                result = "t" + str(self.tempCount)
+
+                result = self.get_memory_address("local", result_type)
 
                 # Hacemos el quadruple y lo ponemos en la lista de quadruples.
                 # Que rara esta la palabra quadruple despues de que la lees varias veces.
@@ -104,9 +188,7 @@ class ICG:
         result_type = self.semantic_cube.is_valid(right_type, left_type, operator_enum)
 
         if result_type:
-            # Hacer la nueva variable tN.
-            self.tempCount = self.tempCount + 1
-            result = "t" + str(self.tempCount)
+            result = self.get_memory_address("local", result_type)
 
             # Hacemos el quadruple y lo ponemos en la lista de quadruples.
             # Que rara esta la palabra quadruple despues de que la lees varias veces.
@@ -140,54 +222,45 @@ class ICG:
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
 
-
     def generate_else_quadruple(self):
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
         pos = self.stackJumps.pop()
         self.stackJumps.append(len(self.quadrupleList) - 1)
         self.fill_quadruple(pos)
-        
+
     def generate_param_quadruple(self, param):
-        # Checamos si es un id, string o un solo numero
-        # Si no es ninguna de esas es por que es una expresion y tenemos
-        # que asignar el ultimo temporal.
-        
-        if(len(param) == 1 or (param[0] == '"' and param[-1] == '"')):
-            quadruple = Quadruple(None, None, "param", param)
-        else:
-            temp = self.quadrupleList[-1].result
-            quadruple = Quadruple(None, None, "param", temp)
-            
+        quadruple = Quadruple(None, None, "param", self.stackOperands.pop())
+
         self.quadrupleList.append(quadruple)
         self.paramCount = self.paramCount + 1
-        
-    def generate_function_call(self, func, return_type):       
+
+    def generate_function_call(self, func, return_type):
         # Hacer la nueva variable tN.
-        
+
         # Si es void entonces no hay necesidad de hacer temporal ni poner
         # un resultado. 
         if return_type != "void":
-            self.tempCount = self.tempCount + 1
-            result = "t" + str(self.tempCount)
-            print(result, return_type)
+            result = self.get_memory_address("local", return_type)
 
             self.stackOperands.append(result)
             self.stackTypes.append(return_type)
         else:
             result = None
-            
+
         # Generamos el quadruplo, ejemplo t3 = call f 
         # Donde N es el numero de parametros que toma la funcion.
         quadruple = Quadruple(func + "()", self.paramCount, "=", result)
         self.quadrupleList.append(quadruple)
-        
+
         # Reiniciamos el contador de parametros.
         self.paramCount = 0
-        
+
     def fill_goto(self, result):
         pos = len(self.quadrupleList) - 1
         self.quadrupleList[pos].change_result(result)
 
     def fill_quadruple(self, pos):
         self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)
+
+    # def generate_obj_file(self):
