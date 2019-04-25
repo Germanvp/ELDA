@@ -9,7 +9,10 @@ Created on Sat Apr 20 21:11:27 2019
 
 class VirtualMemory:
 
-    def __init__(self, parent, size):
+    def __init__(self, parent, size, isMain):
+        
+        self.isMain = isMain
+        
         ### Las direcciones en donde empieza ese espacio en la memoria.
         self.base_global = 5000
         self.base_local = 20000
@@ -30,17 +33,40 @@ class VirtualMemory:
         self.counters_local = [0, 0, 0, 0]
 
         self.counters_constants = [0, 0, 0, 0]
-
+        
+        self.counter_execution = 0 if isMain == True else None
         ### La "memoria" osea los arreglos estos fregados.
         self.memory_global = {}
         self.memory_local = {}
         self.memory_constants = {}
+        self.memory_execution = {} if isMain == True else None
 
         ### Para saber donde buscar, por ejemplo las variables globales.
         ### O adentro de dos for loops
 
         self.parent = parent
         self.size = size
+        self.active_record = None
+        
+        
+    def load_obj_file(self, file):
+        """
+        TODO: What structure will the OBJ file have?
+        :param file:
+        :return:
+        """
+        
+    def add_scope(self, size):
+        if self.isMain:
+            new_scope = VirtualMemory(self, size)
+    
+            if self.counter_execution + size > self.base_execution + 45000:
+                raise TypeError(f"Stack Overflow: The execution stack was filled.")
+            address = self.base_execution + self.counter_execution
+            self.counter_execution = self.counter_execution + size
+    
+            self.active_record = new_scope
+            self.memory_execution[address] = new_scope        
 
     def insert_into_memory(self, variable, memory_type, var_type):
         """

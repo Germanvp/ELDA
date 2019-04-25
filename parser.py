@@ -597,6 +597,7 @@ def p_params(p):
     # Aqui checamos si el tipo es (type[x] || type[x][y] ) o type.
     # Si es un array p[1] debe ser tuple con este formato (temporal) : (type, (rows, columns))
     if len(p) > 2:
+        
         if isinstance(p[1], tuple):
             is_array = True
             dope_vector = p[1][1]
@@ -606,7 +607,7 @@ def p_params(p):
             dope_vector = None
             p_type = p[1]
 
-        address = ic_generator.get_memory_address("local", "int")
+        address = ic_generator.get_memory_address("local", p_type)
         vars_table.insert(p[2], p_type, is_array, dope_vector, address)
 
 
