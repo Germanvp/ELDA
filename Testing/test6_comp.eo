@@ -1,0 +1,39 @@
+## Q ##
+=,35000,None,5000
+Goto,None,None,8
+=,35001,None,20003
+RETURN,20003,None,None
+ENDPROC,None,None,None
+=,45000,None,30000
+ENDPROC,None,None,None
+ERA,func,None,None
++,35002,35003,20000
+param,None,None,20000
+param,None,None,5000
+param,None,None,35003
+GOSUB,func,3,20001
+=,20001,None,20002
+ERA,winter,None,None
+param,None,None,45001
+GOSUB,winter,1,None
+ERA,func,None,None
++,35002,35004,20003
+param,None,None,20003
++,5000,35005,20004
++,20004,35003,20005
+param,None,None,20005
+param,None,None,35003
+GOSUB,func,3,20006
+=,35001,None,5000
+ENDPROC,None,None,None
+## DF ##
+{'global': {'type': 'void'}, 'func': {'type': 'int', 'params_type': 'iii', 'params_count': 3, 'vars_count': 4, 'func_begin': 3}, 'winter': {'type': 'void', 'params_type': 's', 'params_count': 1, 'vars_count': 1, 'func_begin': 6}, 'main': {'type': 'void', 'params_type': '', 'params_count': 0, 'vars_count': 1, 'func_begin': 8}}
+## CT ##
+35000,0
+35001,2
+45000,"Winter is Here"
+35002,3
+35003,5
+45001,"Heho"
+35004,4
+35005,1

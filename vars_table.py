@@ -66,7 +66,11 @@ class VarsTable:
         if table_id not in self.table:
             new_table = {
                 "type": return_type,
-                "vars": {}
+                "vars": {},
+                "params_type": "",
+                "params_count": 0,
+                "vars_count": 0,
+                "func_begin": None
             }
 
             self.table[table_id] = new_table

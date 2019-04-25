@@ -8,6 +8,7 @@ float fVariable = 13.45;
 int getValues(int param) {
     float local = a * (b-c/d) + 12 / 13;
     bool what = a + a * b < c / (d + 1);
+    return a;
 }
 
 void main() {

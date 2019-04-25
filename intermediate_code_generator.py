@@ -29,6 +29,9 @@ class Quadruple:
     def __repr__(self):
         return f"\t{self.operator}\t{self.op1}\t{self.op2}\t{self.result}"
 
+    def __str__(self):
+        return f"{self.operator},{self.op1},{self.op2},{self.result}"
+
     def change_result(self, res):
         self.result = res
 
@@ -53,6 +56,8 @@ class ICG:
         self.whenJumps = []
         self.whenOperands = []
         self.whenTypes = []
+
+        self.main_goto_pos = 0
 
         self.constants = {}
 
@@ -122,7 +127,6 @@ class ICG:
 
             if address > self.base_constants + type_end:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
-            print(address, value)
             self.constants[address] = value
             self.constant_counters[counter] += 1
         else:
@@ -222,6 +226,11 @@ class ICG:
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
 
+    def generate_main_goto(self):
+        quadruple = Quadruple(None, None, "Goto", None)
+        self.quadrupleList.append(quadruple)
+        self.main_goto_pos = len(self.quadrupleList) - 1
+
     def generate_else_quadruple(self):
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
@@ -250,7 +259,7 @@ class ICG:
 
         # Generamos el quadruplo, ejemplo t3 = call f 
         # Donde N es el numero de parametros que toma la funcion.
-        quadruple = Quadruple(func + "()", self.paramCount, "=", result)
+        quadruple = Quadruple(func, self.paramCount, "GOSUB", result)
         self.quadrupleList.append(quadruple)
 
         # Reiniciamos el contador de parametros.
@@ -260,7 +269,35 @@ class ICG:
         pos = len(self.quadrupleList) - 1
         self.quadrupleList[pos].change_result(result)
 
+    def fill_main_goto(self, result):
+        self.quadrupleList[self.main_goto_pos].change_result(result)
+
     def fill_quadruple(self, pos):
         self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)
 
-    # def generate_obj_file(self):
+    def generate_return_quadruple(self, func_type):
+        self.semantic_cube.is_valid(func_type, self.stackTypes.pop(), Operators.RETURN)
+        quadruple = Quadruple(self.stackOperands.pop(), None, 'RETURN', None)
+
+        self.quadrupleList.append(quadruple)
+
+    def generate_endproc(self):
+        quadruple = Quadruple(None, None, 'ENDPROC', None)
+        self.quadrupleList.append(quadruple)
+
+    def generate_era(self, func_name):
+        quadruple = Quadruple(func_name, None, 'ERA', None)
+        self.quadrupleList.append(quadruple)
+
+    def generate_obj_file(self, name, dir_func):
+        with open(f'Testing/{name}_comp.eo', 'w+') as obj_file:
+            obj_file.write('## Q ##\n')
+            pos = 1
+            for i in self.quadrupleList:
+                obj_file.write(f"{str(i)}\n")
+                pos += 1
+            obj_file.write('## DF ##\n')
+            obj_file.write(f'{dir_func}\n')
+            obj_file.write('## CT ##\n')
+            for k, v in self.constants.items():
+                obj_file.write(f"{k},{v}\n")

@@ -27,16 +27,17 @@ try:
             print('Empty file')
         else:
             result = parser.parser.parse(s)
-            if result is None:
-                print('File parsed correctly!')
-                pos = 1
-                print("    operator\top1\top2\tresult")
-                for i in parser.ic_generator.quadrupleList:
-                    print(pos, repr(i))
-                    pos += 1
-                for k, v in parser.ic_generator.constants.items():
-                    print(k, v)
-                # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
+            # if result is None:
+            #     print('File parsed correctly!')
+            #     pos = 1
+            #     print("    operator\top1\top2\tresult")
+            #     for i in parser.ic_generator.quadrupleList:
+            #         print(pos, repr(i))
+            #         pos += 1
+            #     for k, v in parser.ic_generator.constants.items():
+            #         print(k, v)
+            parser.ic_generator.generate_obj_file(name, str(parser.vars_table.table))
+            # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
 except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:

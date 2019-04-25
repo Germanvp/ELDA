@@ -23,11 +23,34 @@ def p_empty(p):
     pass
 
 
+# def p_program(p):
+#     """program : declaracion program
+#                | funcion program
+#                | main
+#     """
+
 def p_program(p):
-    """program : declaracion program
-               | funcion program
-               | main
+    """program : program_d
     """
+    ic_generator.fill_main_goto(vars_table.table["main"]["func_begin"])
+
+
+def p_program_d(p):
+    """program_d : declaracion program_d
+                 | program_f
+    """
+
+
+def p_program_f(p):
+    """program_f : funcion program_f
+                 | program_m
+    """
+
+
+def p_program_m(p):
+    """program_m : main
+    """
+
 
 def p_main_id(p):
     """main_id : void MAIN
@@ -36,6 +59,7 @@ def p_main_id(p):
         vars_table.initialize()
 
     ic_generator.reset_bases()
+    # vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
     if vars_table.current_scope is not vars_table.table["global"]:
         del vars_table.current_scope["vars"]
 
@@ -43,22 +67,36 @@ def p_main_id(p):
 
 
 def p_main(p):
-    """main : main_id '(' ')' bloque
+    """main : main_id '(' r_main_par bloque_void
     """
     ic_generator.reset_bases()
+    vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
     del vars_table.current_scope["vars"]
     del vars_table.table["global"]["vars"]
 
 
-def p_bloque(p):
-    """bloque : '{' bloqueD bloqueE return '}'
+def p_r_main_par(p):
+    """r_main_par : ')'
     """
+    vars_table.current_scope["func_begin"] = len(ic_generator.quadrupleList) + 1
+
+
+def p_bloque_void(p):
+    """bloque_void : '{' bloqueD bloqueE '}'
+    """
+    ic_generator.generate_endproc()
+
+
+def p_bloque_return(p):
+    """bloque_return : '{' bloqueD bloqueE return '}'
+    """
+    ic_generator.generate_endproc()
 
 
 def p_return(p):
-    """return : RETURN expresion
-              | empty
+    """return : RETURN expresion ';'
     """
+    ic_generator.generate_return_quadruple(vars_table.current_scope["type"])
 
 
 def p_bloqueD(p):
@@ -69,7 +107,7 @@ def p_bloqueD(p):
 
 def p_bloqueE(p):
     """bloqueE : estatuto bloqueE
-                | empty
+               | empty
     """
 
 
@@ -329,21 +367,28 @@ def p_rango(p):
     p[0] = p[5]
     
 def p_llamada(p):
-    """llamada : ID '(' llamadaD ')'
+    """llamada : llamada_id '(' llamadaD ')'
     """
     if not vars_table.initialized:
         vars_table.initialize()
-        
+
     if p[1] in vars_table.table:
         # Que tipo regresa la funcion.
         return_type = vars_table.table[p[1]]["type"]
-        
+
         ic_generator.generate_function_call(p[1], return_type)
-    else:         
+    else:
         raise TypeError(f"'{p[1]}' function not declared.")
-        
+
     p[0] = ic_generator.quadrupleList[-1].result
 
+
+def p_llamada_id(p):
+    """llamada_id : ID
+    """
+    ic_generator.generate_era(p[1])
+
+    p[0] = p[1]
     
 # Expresion para que se puedan guardar los parametros como parametros, duh.
 def p_expresionL(p):
@@ -351,7 +396,8 @@ def p_expresionL(p):
     
     """
     ic_generator.generate_param_quadruple(p[1])
-    
+
+
 def p_llamadaD(p):
     """llamadaD : expresionL ',' llamadaD
                 | expresionL
@@ -568,19 +614,49 @@ def p_arregloD(p):
     """
 
 
-def p_funcion_id(p):
-    """funcion_id : type ID
-                  | void ID
+def p_funcion_type_id(p):
+    """funcion_type_id : type ID
     """
     ic_generator.reset_bases()
     if vars_table.current_scope is not vars_table.table["global"]:
         del vars_table.current_scope["vars"]
+    else:
+        ic_generator.generate_main_goto()
+    vars_table.create_table(p[2], p[1])
+
+
+def p_funcion_void_id(p):
+    """funcion_void_id : void ID
+    """
+    ic_generator.reset_bases()
+    if vars_table.current_scope is not vars_table.table["global"]:
+        del vars_table.current_scope["vars"]
+    else:
+        ic_generator.generate_main_goto()
     vars_table.create_table(p[2], p[1])
 
 
 def p_funcion(p):
-    """funcion : funcion_id '(' params ')' bloque
+    """funcion : funcion_void
+               | funcion_type
     """
+    vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
+
+
+def p_funcion_void(p):
+    """funcion_void : funcion_void_id '(' params r_func_par bloque_void
+    """
+
+
+def p_funcion_type(p):
+    """funcion_type : funcion_type_id '(' params r_func_par bloque_return
+    """
+
+
+def p_r_func_par(p):
+    """r_func_par : ')'
+    """
+    vars_table.current_scope["func_begin"] = len(ic_generator.quadrupleList) + 1
 
 
 def p_void(p):
@@ -606,8 +682,10 @@ def p_params(p):
             dope_vector = None
             p_type = p[1]
 
-        address = ic_generator.get_memory_address("local", "int")
+        address = ic_generator.get_memory_address("local", p_type)
         vars_table.insert(p[2], p_type, is_array, dope_vector, address)
+        vars_table.current_scope["params_type"] += p_type[0]
+        vars_table.current_scope["params_count"] += 1
 
 
 def p_typeA(p):
@@ -637,7 +715,6 @@ def p_error(p):
     if p == None:
         token = "end of file"
     else:
-        print(p)
         token = f"{p.type}({p.value}) on line {p.lineno}"
 
     raise TypeError(f"Syntax error: Unexpected {token}")
