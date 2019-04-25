@@ -8,6 +8,7 @@ Created on Thu Mar 14 17:03:27 2019
 
 import parser
 import json
+from VirtualMachine.virtual_machine import VirtualMachine
 
 # For parser and lexer testing, writing code on terminal
 # int a = 5; int b = 50; int funcA() { int c;} void main(){}
@@ -38,6 +39,10 @@ try:
             #         print(k, v)
             parser.ic_generator.generate_obj_file(name, str(parser.vars_table.table))
             # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
+            ### TEST
+            vm = VirtualMachine()
+            vm.load_obj_file("Testing/" + name + "_comp")
+            print("Ni le busques aqui, esta en el archivo .eo")
 except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:

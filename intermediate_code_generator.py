@@ -6,7 +6,7 @@ Created on Sun Mar 24 14:37:32 2019
 @author: Juan Manuel Perez & German Villacorta
 """
 from semantic_cube import SemanticCube, Operators
-
+import json
 
 class Quadruple:
     """
@@ -290,14 +290,12 @@ class ICG:
         self.quadrupleList.append(quadruple)
 
     def generate_obj_file(self, name, dir_func):
-        with open(f'Testing/{name}_comp.eo', 'w+') as obj_file:
-            obj_file.write('## Q ##\n')
-            pos = 1
-            for i in self.quadrupleList:
-                obj_file.write(f"{str(i)}\n")
-                pos += 1
-            obj_file.write('## DF ##\n')
-            obj_file.write(f'{dir_func}\n')
-            obj_file.write('## CT ##\n')
-            for k, v in self.constants.items():
-                obj_file.write(f"{k},{v}\n")
+        
+        file = {}
+        file["Quadruples"] = [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList]
+        file["Dir Func"] = dir_func
+        file["Const Table"] = [(k, v) for k, v in self.constants.items()]
+        
+        with open(f'Testing/{name}_comp.eo', 'w') as obj_file2:
+            json.dump(file, obj_file2,separators=(',', ':'))
+            
