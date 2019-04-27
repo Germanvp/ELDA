@@ -27,10 +27,10 @@ class Quadruple:
         self.result = result
 
     def __repr__(self):
-        return f"\t{self.operator}\t{self.op1}\t{self.op2}\t{self.result}"
+        return f"\t{self.operator}\t{self.op1}\t{self.op2}\t{self.result}\n"
 
     def __str__(self):
-        return f"{self.operator},{self.op1},{self.op2},{self.result}"
+        return f"{self.operator},{self.op1},{self.op2},{self.result}\n"
 
     def change_result(self, res):
         self.result = res
@@ -57,7 +57,7 @@ class ICG:
         self.whenOperands = []
         self.whenTypes = []
 
-        self.main_goto_pos = 0
+        self.main_goto_pos = None
 
         self.constants = {}
 
@@ -77,7 +77,7 @@ class ICG:
     def reset_bases(self):
         self.local_counters = [0, 0, 0, 0]
 
-    def get_memory_address(self, memory_type, var_type, value=None):
+    def get_memory_address(self, memory_type, var_type, size = 1, value = None):
         """
         Inserta variable en memoria y regresa su direccion para que la puedas
         poner en la tabla de variables.
@@ -109,15 +109,15 @@ class ICG:
         if memory_type == "global":
             address = self.base_global + type_start + self.global_counters[counter]
 
-            if address > self.base_global + type_end:
+            if address + size > self.base_global + type_end:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
-            self.global_counters[counter] += 1
+            self.global_counters[counter] += size
         elif memory_type == "local":
             address = self.base_local + type_start + self.local_counters[counter]
 
-            if address > self.base_local + type_end:
+            if address + size > self.base_local + type_end:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
-            self.local_counters[counter] += 1
+            self.local_counters[counter] += size
         elif memory_type == "constants":
             if value is None:
                 raise TypeError(f"Value must be specified for constants")
@@ -125,21 +125,12 @@ class ICG:
                 return [k for k, v in self.constants.items() if v == value].pop()
             address = self.base_constants + type_start + self.constant_counters[counter]
 
-            if address > self.base_constants + type_end:
+            if address + size > self.base_constants + type_end:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
             self.constants[address] = value
-            self.constant_counters[counter] += 1
+            self.constant_counters[counter] += size
         else:
             raise TypeError(f"Unknown memory '{memory_type}'")
-
-        # if type_start is self.int_start:
-        #     self.int_start += 1
-        # elif type_start is self.float_start:
-        #     self.float_start += 1
-        # elif type_start is self.string_start:
-        #     self.string_start += 1
-        # else:
-        #     self.bool_start += 1
 
         return address
 
@@ -171,13 +162,15 @@ class ICG:
                 # Hacemos el quadruple y lo ponemos en la lista de quadruples.
                 # Que rara esta la palabra quadruple despues de que la lees varias veces.
                 quadruple = Quadruple(right_operand, left_operand, operator, result)
+                self.stackOperands.append(result)
+                self.stackTypes.append(result_type)
             else:
                 result = left_operand
                 quadruple = Quadruple(right_operand, None, operator, result)
 
+
             self.quadrupleList.append(quadruple)
-            self.stackOperands.append(result)
-            self.stackTypes.append(result_type)
+            
 
     def generate_is_quadruple(self):
         left_operand = self.stackOperands.pop()
@@ -270,7 +263,8 @@ class ICG:
         self.quadrupleList[pos].change_result(result)
 
     def fill_main_goto(self, result):
-        self.quadrupleList[self.main_goto_pos].change_result(result)
+        if self.main_goto_pos:
+            self.quadrupleList[self.main_goto_pos].change_result(result)
 
     def fill_quadruple(self, pos):
         self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)
@@ -288,6 +282,21 @@ class ICG:
     def generate_era(self, func_name):
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
+        
+    def calculate_index_address(self, base, i, j, dope_vector, name):
+        columns = dope_vector[1]
+        rows = dope_vector[0]
+        
+        if i >= columns or j >= rows or i < 0 or j < 0:
+            raise TypeError(f"Index [{j}][{i}] for {name} out of range")
+            
+        index_address = base + (j * columns + i)        
+        offset = index_address - base
+        
+        # TODO: Genera quads para la funcion del index.
+
+
+        return index_address, offset
 
     def generate_obj_file(self, name, dir_func):
         

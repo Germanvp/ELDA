@@ -1,0 +1,4 @@
+int b = 3;
+void main() {
+    b = 1;
+}

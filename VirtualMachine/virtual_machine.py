@@ -23,35 +23,34 @@ class VirtualMachine:
         :param file:
         :return:
         """
-        file = open(file_name + ".eldo", "r")
+        file = open(file_name + ".eo", "r")
         data = json.load(file)
-        print(data["Const Table"])
+        
         
         for const_item in data["Const Table"]:
             address = const_item[0]
             value = const_item[1]
             self.active_memory.memory_constants[address] = value
             
-            
+        
         self.process_quadruples(data["Quadruples"], data["Dir Func"])
     
     def process_quadruples(self, quadrupleList, dir_func):
-        print(quadrupleList)
         for operator, op1, op2, result in quadrupleList:
             if operator == "+":
-                print(result)
+                print(".")
             elif operator == "-":
-                print(result)
+                print(".")
             elif operator == "*":
-                print(result)
+                print(".")
             elif operator == "/":
-                print(result)
+                print(".")
             elif operator == "=":
                 self.active_memory.insert_into_memory(op1, result)
             elif operator == "GOSUB":
-                print(result)
+                print(".")
             elif operator == "ENDPROC":
-                print(result)
+                print(".")
 
     
     

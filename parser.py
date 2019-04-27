@@ -129,24 +129,43 @@ def p_declaracion(p):
         is_array = True
         dope_vector = p[1][1]
         p_type = p[1][0]
+        size = dope_vector[0] * dope_vector[1]
+
     else:
         is_array = False
         dope_vector = None
         p_type = p[1]
+        size = 1
 
     if vars_table.current_scope is vars_table.table["global"]:
-        address = ic_generator.get_memory_address("global", p_type)
+        address = ic_generator.get_memory_address("global", p_type, size)
     else:
-        address = ic_generator.get_memory_address("local", p_type)
+        address = ic_generator.get_memory_address("local", p_type, size)
 
     vars_table.insert(p[2], p_type, is_array, dope_vector, address)
+#    ic_generator.stackOperands.append(address)
+#    ic_generator.stackTypes.append(p_type)
 
-    ic_generator.stackOperands.append(address)
-    ic_generator.stackTypes.append(p_type)
-
+    ### Si hay operators y el ultimo operator que hay es una asignacion, 
+    ### hacemos el quadr de asignacion.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
-        ic_generator.generate_quadruple()
+        ### Si es un vector tenemos que asignar todos los valores a todas sus 
+        ### casillas. 
+        if (dope_vector) :
+            ic_generator.stackOperators.pop()
+            # Vamos poniendo de ultimo al primero. 
+            # Yo se, esta feo asi el for loop.
+            for i in range(size - 1, -1, -1):
+              ic_generator.stackOperators.append("=")
+              ic_generator.stackOperands.append(address + i)
 
+              ic_generator.stackTypes.append(p_type)
+              ic_generator.generate_quadruple()
+
+        else:
+            ic_generator.stackOperands.append(address)
+            ic_generator.stackTypes.append(p_type)
+            ic_generator.generate_quadruple()
 
 def p_estatuto(p):
     """estatuto : asignacion
@@ -168,11 +187,14 @@ def p_equal(p):
 def p_asignacion(p):
     """asignacion : id equal expresion ';'
     """
+    # Con los arreglos p[1] ahora regresa (id, offset)
+    # si no es un arreglo el offset es 0.
     
-    variable = vars_table.search(p[1])
-
+    variable = vars_table.search(p[1][0])
+    offset = p[1][1]
+    
     if variable:
-        ic_generator.stackOperands.append(variable["address"])
+        ic_generator.stackOperands.append(variable["address"] + offset)
         ic_generator.stackTypes.append(variable["type"])
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
@@ -293,7 +315,7 @@ def p_for(p):
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
 
-    const_address = ic_generator.get_memory_address("constants", "int", 1)
+    const_address = ic_generator.get_memory_address("constants", "int", 1, 1)
 
     ic_generator.stackOperands.append(const_address)
     ic_generator.stackTypes.append("int")
@@ -315,7 +337,7 @@ def p_for(p):
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("<")
 
-    const_address = ic_generator.get_memory_address("constants", "int", p[4])
+    const_address = ic_generator.get_memory_address("constants", "int", 1, p[4])
 
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperands.append(const_address)
@@ -535,7 +557,7 @@ def p_constant_i(p):
     """constant_i : INT
     """
     p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "int", p[1])
+    address = ic_generator.get_memory_address("constants", "int", 1, p[1])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
 
@@ -544,7 +566,7 @@ def p_constant_f(p):
     """constant_f : FLOAT
     """
     p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "float", p[1])
+    address = ic_generator.get_memory_address("constants", "float", 1,  p[1])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("float")
 
@@ -554,7 +576,7 @@ def p_constant_b(p):
                   | FALSE
     """
     p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "bool", p[1])
+    address = ic_generator.get_memory_address("constants", "bool", 1, p[1])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("bool")
 
@@ -563,7 +585,7 @@ def p_constant_s(p):
     """constant_s : STRING
     """
     p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "string", p[1])
+    address = ic_generator.get_memory_address("constants", "string", 1, p[1])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("string")
 
@@ -589,9 +611,25 @@ def p_id(p):
     variable = vars_table.search(p[1])
 
     if variable:
-        ic_generator.stackOperands.append(variable["address"])
-        ic_generator.stackTypes.append(variable["type"])
-        p[0] = p[1]
+        if variable["is_array"]:
+            ### Aqui sacamos las filas y las columas del dope vector
+            ### indices [i][j] y calculamos la direccion. Regresamos tupla por si
+            ### es asignacion.
+            j = int(p[2][0])
+            i = int(p[2][1])
+            base = variable["address"]
+            dope_vector = variable["dope_vector"]
+
+            address, offset = ic_generator.calculate_index_address(base, i, j, dope_vector, p[1])
+
+            ic_generator.stackOperands.append(address)
+            ic_generator.stackTypes.append(variable["type"])
+            
+            p[0] = (p[1], offset)
+        else:
+            ic_generator.stackOperands.append(variable["address"])
+            ic_generator.stackTypes.append(variable["type"])
+            p[0] = (p[1], 0)
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
 
@@ -601,18 +639,40 @@ def p_indice(p):
               | '[' expresion ']' '[' expresion ']'
               | empty
     """
-
+    if len(p) > 4:
+        p[0] = (p[2], p[5])
+    elif len(p) > 2:
+        p[0] = (0, p[2])
 
 def p_arreglo(p):
     """arreglo : '[' arregloD ']'
+               | arregloD
     """
-
-
+    if len(p) > 2:
+        p[0] = p[2]
+    else:
+        p[0] = p[1]
+        
 def p_arregloD(p):
-    """arregloD : expresion ',' arregloD
+    """arregloD : '[' arregloE ']' ',' arregloD
+                | '[' arregloE ']'
+    """
+    if len(p) > 4:
+        if(p[5][1] != p[2]):
+            raise TypeError('Arreglos en misma matriz deben ser de tamaños iguales')
+        p[0] = (p[5][0] + 1, p[2])
+    else:
+        p[0] = (1, p[2])
+    
+def p_arregloE(p):
+    """arregloE : expresion ',' arregloE
+                | expresion
                 | empty
     """
-
+    if len(p) > 2:
+        p[0] = 1 + p[3]
+    else:
+        p[0] = 1
 
 def p_funcion_type_id(p):
     """funcion_type_id : type ID
@@ -677,12 +737,14 @@ def p_params(p):
             is_array = True
             dope_vector = p[1][1]
             p_type = p[1][0]
+            size = dope_vector[0] * dope_vector[1]
         else:
             is_array = False
             dope_vector = None
             p_type = p[1]
+            size = 1
 
-        address = ic_generator.get_memory_address("local", p_type)
+        address = ic_generator.get_memory_address("local", p_type, size = size)
         vars_table.insert(p[2], p_type, is_array, dope_vector, address)
         vars_table.current_scope["params_type"] += p_type[0]
         vars_table.current_scope["params_count"] += 1

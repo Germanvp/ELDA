@@ -53,6 +53,7 @@ class VarsTable:
             }
 
             self.current_scope["vars"][var_id] = table_entry
+
         else:
             raise TypeError(f"Variable already declared '{var_id}'")
 
