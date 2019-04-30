@@ -143,29 +143,30 @@ def p_declaracion(p):
         address = ic_generator.get_memory_address("local", p_type, size)
 
     vars_table.insert(p[2], p_type, is_array, dope_vector, address)
-#    ic_generator.stackOperands.append(address)
-#    ic_generator.stackTypes.append(p_type)
+    #    ic_generator.stackOperands.append(address)
+    #    ic_generator.stackTypes.append(p_type)
 
-    ### Si hay operators y el ultimo operator que hay es una asignacion, 
-    ### hacemos el quadr de asignacion.
+    # Si hay operators y el ultimo operator que hay es una asignacion,
+    # hacemos el quadr de asignacion.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
-        ### Si es un vector tenemos que asignar todos los valores a todas sus 
-        ### casillas. 
-        if (dope_vector) :
+        # Si es un vector tenemos que asignar todos los valores a todas sus
+        # casillas.
+        if dope_vector:
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
             for i in range(size - 1, -1, -1):
-              ic_generator.stackOperators.append("=")
-              ic_generator.stackOperands.append(address + i)
+                ic_generator.stackOperators.append("=")
+                ic_generator.stackOperands.append(address + i)
 
-              ic_generator.stackTypes.append(p_type)
-              ic_generator.generate_quadruple()
+                ic_generator.stackTypes.append(p_type)
+                ic_generator.generate_quadruple()
 
         else:
             ic_generator.stackOperands.append(address)
             ic_generator.stackTypes.append(p_type)
             ic_generator.generate_quadruple()
+
 
 def p_estatuto(p):
     """estatuto : asignacion
@@ -189,16 +190,16 @@ def p_asignacion(p):
     """
     # Con los arreglos p[1] ahora regresa (id, offset)
     # si no es un arreglo el offset es 0.
-    
+
     variable = vars_table.search(p[1][0])
     offset = p[1][1]
-    
+
     if variable:
         ic_generator.stackOperands.append(variable["address"] + offset)
         ic_generator.stackTypes.append(variable["type"])
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
-        
+
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
         ic_generator.generate_quadruple()
 
@@ -315,7 +316,7 @@ def p_for(p):
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
 
-    const_address = ic_generator.get_memory_address("constants", "int", 1, 1)
+    const_address = ic_generator.get_memory_address("constants", "int", 1, '1')
 
     ic_generator.stackOperands.append(const_address)
     ic_generator.stackTypes.append("int")
@@ -343,7 +344,7 @@ def p_for(p):
     ic_generator.stackOperands.append(const_address)
 
     ic_generator.generate_quadruple()
-        
+
     # Genera el GotoF. Pues si verdad, que otra cosa puede hacer una funcion 
     # que se llame generate gotoF. 
     ic_generator.generate_gotoF()
@@ -363,8 +364,8 @@ def p_while(p):
     """
     # Saca volumen de cubo.
     ic_generator.generate_gotoF()
-    
-    
+
+
 def p_ciclo(p):
     """ciclo : for bloque_simp
              | while bloque_simp
@@ -372,22 +373,24 @@ def p_ciclo(p):
     """
     end = ic_generator.stackJumps.pop()
     revisit = ic_generator.stackJumps.pop()
-    
+
     # LLenamos el goTo que creamos para que vuelva a checar la cond. del loop.
     ic_generator.generate_goto()
     ic_generator.fill_goto(revisit)
-    
+
     # Llenamos el goToF que creamos para cuando no se cumpla la condicion
     # con la linea a la que tiene que saltar.
     ic_generator.fill_quadruple(end)
-        
+
+
 def p_rango(p):
     """rango : RANGE '(' expresion ',' INT ')'
     """
     # Regresamos el valor maximo que puede ser el iterador del if, 
     # esto para usarlo y crear la condicion. Ej. i < 10.
     p[0] = p[5]
-    
+
+
 def p_llamada(p):
     """llamada : llamada_id '(' llamadaD ')'
     """
@@ -411,7 +414,8 @@ def p_llamada_id(p):
     ic_generator.generate_era(p[1])
 
     p[0] = p[1]
-    
+
+
 # Expresion para que se puedan guardar los parametros como parametros, duh.
 def p_expresionL(p):
     """expresionL : expresion
@@ -425,6 +429,7 @@ def p_llamadaD(p):
                 | expresionL
                 | empty
     """
+
 
 def p_expresion(p):
     """expresion : not expr
@@ -457,7 +462,8 @@ def p_or(p):
 
 
 def p_simp_oper(p):
-    """simp_oper : SIMPOPER
+    """simp_oper : SUM
+                 | MINUS
     """
     p[0] = p[1]
     # 3. 
@@ -528,7 +534,7 @@ def p_termino(p):
                 | factor
     """
     # Solo regresamos primer factor, es por mientras.
-    if (len(p) == 2):
+    if len(p) == 2:
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -543,7 +549,7 @@ def p_factor(p):
               | valor
     """
     # Solo regresamos si es valor, es por mientras.
-    if (len(p) == 2):
+    if len(p) == 2:
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -553,20 +559,35 @@ def p_factor(p):
         ic_generator.generate_quadruple()
 
 
-def p_constant_i(p):
-    """constant_i : INT
+def p_minus(p):
+    """minus : MINUS
+             | empty
     """
     p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "int", 1, p[1])
+
+
+def p_constant_i(p):
+    """constant_i : minus INT
+    """
+    if p[1] == '-':
+        p[0] = f'-{p[2]}'
+        address = ic_generator.get_memory_address("constants", "int", 1, f'-{p[2]}')
+    else:
+        p[0] = p[2]
+        address = ic_generator.get_memory_address("constants", "int", 1, p[2])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
 
 
 def p_constant_f(p):
-    """constant_f : FLOAT
+    """constant_f : minus FLOAT
     """
-    p[0] = p[1]
-    address = ic_generator.get_memory_address("constants", "float", 1,  p[1])
+    if p[1] == '-':
+        p[0] = f'-{p[2]}'
+        address = ic_generator.get_memory_address("constants", "float", 1, f'-{p[2]}')
+    else:
+        p[0] = p[2]
+        address = ic_generator.get_memory_address("constants", "float", 1, p[2])
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("float")
 
@@ -602,6 +623,7 @@ def p_valor(p):
     # Solo regresamos 1 valor, es por mientras.
     p[0] = p[1]
 
+
 def p_id(p):
     """id : ID indice
     """
@@ -624,7 +646,7 @@ def p_id(p):
 
             ic_generator.stackOperands.append(address)
             ic_generator.stackTypes.append(variable["type"])
-            
+
             p[0] = (p[1], offset)
         else:
             ic_generator.stackOperands.append(variable["address"])
@@ -644,6 +666,7 @@ def p_indice(p):
     elif len(p) > 2:
         p[0] = (0, p[2])
 
+
 def p_arreglo(p):
     """arreglo : '[' arregloD ']'
                | arregloD
@@ -652,18 +675,20 @@ def p_arreglo(p):
         p[0] = p[2]
     else:
         p[0] = p[1]
-        
+
+
 def p_arregloD(p):
     """arregloD : '[' arregloE ']' ',' arregloD
                 | '[' arregloE ']'
     """
     if len(p) > 4:
-        if(p[5][1] != p[2]):
+        if p[5][1] != p[2]:
             raise TypeError('Arreglos en misma matriz deben ser de tamaños iguales')
         p[0] = (p[5][0] + 1, p[2])
     else:
         p[0] = (1, p[2])
-    
+
+
 def p_arregloE(p):
     """arregloE : expresion ',' arregloE
                 | expresion
@@ -673,6 +698,7 @@ def p_arregloE(p):
         p[0] = 1 + p[3]
     else:
         p[0] = 1
+
 
 def p_funcion_type_id(p):
     """funcion_type_id : type ID
@@ -744,7 +770,7 @@ def p_params(p):
             p_type = p[1]
             size = 1
 
-        address = ic_generator.get_memory_address("local", p_type, size = size)
+        address = ic_generator.get_memory_address("local", p_type, size=size)
         vars_table.insert(p[2], p_type, is_array, dope_vector, address)
         vars_table.current_scope["params_type"] += p_type[0]
         vars_table.current_scope["params_count"] += 1
@@ -757,7 +783,8 @@ def p_typeA(p):
             | TYPE_STRING
     """
     p[0] = p[1]
-    
+
+
 def p_type(p):
     """type : typeA
             | typeA '[' INT ']' '[' INT ']'
@@ -774,7 +801,7 @@ def p_type(p):
 
 def p_error(p):
     # get formatted representation of stack
-    if p == None:
+    if p is None:
         token = "end of file"
     else:
         token = f"{p.type}({p.value}) on line {p.lineno}"

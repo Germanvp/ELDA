@@ -8,6 +8,7 @@ Created on Sun Mar 24 14:37:32 2019
 from semantic_cube import SemanticCube, Operators
 import json
 
+
 class Quadruple:
     """
     Quadruple object definition.
@@ -77,7 +78,7 @@ class ICG:
     def reset_bases(self):
         self.local_counters = [0, 0, 0, 0]
 
-    def get_memory_address(self, memory_type, var_type, size = 1, value = None):
+    def get_memory_address(self, memory_type, var_type, size=1, value=None):
         """
         Inserta variable en memoria y regresa su direccion para que la puedas
         poner en la tabla de variables.
@@ -119,6 +120,7 @@ class ICG:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
             self.local_counters[counter] += size
         elif memory_type == "constants":
+            value = self.convert_to_type(value)
             if value is None:
                 raise TypeError(f"Value must be specified for constants")
             elif value in self.constants.values():
@@ -133,6 +135,24 @@ class ICG:
             raise TypeError(f"Unknown memory '{memory_type}'")
 
         return address
+
+    @staticmethod
+    def convert_to_type(value):
+        """
+
+        :param value:
+        :return:
+        """
+        if value is None:
+            return None
+        if value == 'false' or value == 'true':
+            return bool(value)
+        elif value[0] == '"' and value[-1] == '"':
+            return str(value)
+        try:
+            return int(value)
+        except ValueError:
+            return float(value)
 
     def generate_quadruple(self):
         """
@@ -168,9 +188,7 @@ class ICG:
                 result = left_operand
                 quadruple = Quadruple(right_operand, None, operator, result)
 
-
             self.quadrupleList.append(quadruple)
-            
 
     def generate_is_quadruple(self):
         left_operand = self.stackOperands.pop()
@@ -282,29 +300,27 @@ class ICG:
     def generate_era(self, func_name):
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
-        
+
     def calculate_index_address(self, base, i, j, dope_vector, name):
         columns = dope_vector[1]
         rows = dope_vector[0]
-        
+
         if i >= columns or j >= rows or i < 0 or j < 0:
             raise TypeError(f"Index [{j}][{i}] for {name} out of range")
-            
-        index_address = base + (j * columns + i)        
-        offset = index_address - base
-        
-        # TODO: Genera quads para la funcion del index.
 
+        index_address = base + (j * columns + i)
+        offset = index_address - base
+
+        # TODO: Genera quads para la funcion del index.
 
         return index_address, offset
 
     def generate_obj_file(self, name, dir_func):
-        
+
         file = {}
         file["Quadruples"] = [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList]
         file["Dir Func"] = dir_func
         file["Const Table"] = [(k, v) for k, v in self.constants.items()]
-        
+
         with open(f'Testing/{name}_comp.eo', 'w') as obj_file2:
-            json.dump(file, obj_file2,separators=(',', ':'))
-            
+            json.dump(file, obj_file2, separators=(',', ':'))

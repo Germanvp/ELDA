@@ -12,10 +12,13 @@ int getValues(int param) {
 }
 
 void main() {
-    if (a*b > c) {
+    out(a*b);
+    out(c);
+    if (a*b < c) {
         a = 12;
         out("Hello world");
     } else {
         b = a * c;
+        out(b);
     }
 }

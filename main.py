@@ -28,16 +28,16 @@ try:
             print('Empty file')
         else:
             result = parser.parser.parse(s)
-            if result is None:
-                print('File parsed correctly!')
-                pos = 1
-                print("    operator\top1\top2\tresult")
-                for i in parser.ic_generator.quadrupleList:
-                    print(pos, repr(i))
-                    pos += 1
-                for k, v in parser.ic_generator.constants.items():
-                    print(k, v)
-                    
+            # if result is None:
+            #     print('File parsed correctly!')
+            #     pos = 1
+            #     print("    operator\top1\top2\tresult")
+            #     for i in parser.ic_generator.quadrupleList:
+            #         print(pos, repr(i))
+            #         pos += 1
+            #     for k, v in parser.ic_generator.constants.items():
+            #         print(k, v)
+
             parser.ic_generator.generate_obj_file(name, str(parser.vars_table.table))
 #            print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
 #            print(json.dumps(parser.vars_table.current_scope, indent=2, sort_keys=True))
@@ -45,8 +45,7 @@ try:
             ### TEST
             vm = VirtualMachine()
             vm.load_obj_file("Testing/" + name + "_comp")
-            print("No llores Juanma")
-            
+
 except TypeError as ex:
     print(ex)
 except FileNotFoundError as ex:

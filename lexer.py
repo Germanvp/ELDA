@@ -36,15 +36,16 @@ reserved = {
             'main': 'MAIN'
         }
 
-tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'SIMPOPER', 'COMPOPER', 'RELOP'
+tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'COMPOPER', 'RELOP', 'SUM', 'MINUS'
           ] + list(reserved.values())
 
-t_SIMPOPER = r'\+|\-'
+t_SUM = r'\+'
+t_MINUS = r'\-'
 t_COMPOPER = r'\*|\/'
 t_RELOP = r'\<|\>|\<\>|\<\=|\>\=|\=\='
 t_EQUAL = r'\='
-t_INT = r'\d+'
-t_FLOAT = r'([0-9])+\.([0-9])*'
+t_INT = r'-?\d+'
+t_FLOAT = r'(-?[0-9])+\.([0-9])*'
 t_STRING = r'"[a-zA-Z0-9_\s]*"'
 t_ignore_SPACE = r'(\s|\n|\r)+'
 
