@@ -35,6 +35,7 @@ def p_program(p):
     ic_generator.fill_main_goto(vars_table.table["main"]["func_begin"])
 
 
+
 def p_program_d(p):
     """program_d : declaracion program_d
                  | program_f
@@ -172,7 +173,7 @@ def p_estatuto(p):
     """estatuto : asignacion
                 | condicion
                 | when
-                | in
+                | in ';'
                 | out
                 | ciclo
                 | llamada ';'
@@ -276,8 +277,10 @@ def p_condicion(p):
 
 
 def p_in(p):
-    """ in : IN '(' ')' ';'
+    """ in : IN '(' ')'
     """
+    ic_generator.stackOperators.append("in")
+    ic_generator.generate_in_quadruple()
 
 
 def p_out(p):
@@ -439,12 +442,17 @@ def p_expresion(p):
     if len(p) == 3:
         p[0] = p[2]
 
+    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['not']:
+        ic_generator.generate_not_quadruple()
+
 
 def p_not(p):
     """not : NOT
            | empty
     """
     p[0] = p[1]
+    if p[1] is not None:
+        ic_generator.stackOperators.append(p[1])
 
 
 def p_and(p):
@@ -525,7 +533,7 @@ def p_exp(p):
         p[0] = p[1:]
 
     # ? No sale en ppt.
-    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['>', '<', '<>', '==', '<=', '>=']:
+    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['>', '<', '!=', '==', '<=', '>=']:
         ic_generator.generate_quadruple()
 
 
@@ -615,6 +623,7 @@ def p_valor(p):
     """valor : llamada
              | id
              | arreglo
+             | in
              | constant_b
              | constant_i
              | constant_f
@@ -703,6 +712,9 @@ def p_arregloE(p):
 def p_funcion_type_id(p):
     """funcion_type_id : type ID
     """
+    if not vars_table.initialized:
+        vars_table.initialize()
+
     ic_generator.reset_bases()
     if vars_table.current_scope is not vars_table.table["global"]:
         del vars_table.current_scope["vars"]
@@ -714,6 +726,9 @@ def p_funcion_type_id(p):
 def p_funcion_void_id(p):
     """funcion_void_id : void ID
     """
+    if not vars_table.initialized:
+        vars_table.initialize()
+
     ic_generator.reset_bases()
     if vars_table.current_scope is not vars_table.table["global"]:
         del vars_table.current_scope["vars"]

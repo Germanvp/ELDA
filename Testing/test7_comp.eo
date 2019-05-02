@@ -1,1 +1,1 @@
-{"Quadruples":[["=",35000,null,5000],["=",35001,null,5000],["ENDPROC",null,null,null]],"Dir Func":"{'global': {'type': 'void'}, 'main': {'type': 'void', 'params_type': '', 'params_count': 0, 'vars_count': 0, 'func_begin': 2}}","Const Table":[[35000,"3"],[35001,"1"]]}
+{"Quadruples":[["=",35000,null,5000],["=",35001,null,5000],["ENDPROC",null,null,null]],"Dir Func":"{'global': {'type': 'void'}, 'main': {'type': 'void', 'params_type': '', 'params_count': 0, 'vars_count': 0, 'func_begin': 2}}","Const Table":[[35000,3],[35001,1]]}

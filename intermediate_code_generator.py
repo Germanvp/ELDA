@@ -120,7 +120,6 @@ class ICG:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
             self.local_counters[counter] += size
         elif memory_type == "constants":
-            value = self.convert_to_type(value)
             if value is None:
                 raise TypeError(f"Value must be specified for constants")
             elif value in self.constants.values():
@@ -135,24 +134,6 @@ class ICG:
             raise TypeError(f"Unknown memory '{memory_type}'")
 
         return address
-
-    @staticmethod
-    def convert_to_type(value):
-        """
-
-        :param value:
-        :return:
-        """
-        if value is None:
-            return None
-        if value == 'false' or value == 'true':
-            return bool(value)
-        elif value[0] == '"' and value[-1] == '"':
-            return str(value)
-        try:
-            return int(value)
-        except ValueError:
-            return float(value)
 
     def generate_quadruple(self):
         """
@@ -190,6 +171,22 @@ class ICG:
 
             self.quadrupleList.append(quadruple)
 
+    def generate_not_quadruple(self):
+        operand = self.stackOperands.pop()
+        var_type = self.stackTypes.pop()
+
+        operator = self.stackOperators.pop()
+
+        if var_type == 'bool':
+            result = self.get_memory_address("local", "bool")
+
+            quadruple = Quadruple(operand, None, operator, result)
+            self.quadrupleList.append(quadruple)
+            self.stackOperands.append(result)
+            self.stackTypes.append('bool')
+        else:
+            raise TypeError(f"Cannot apply operator 'not' to type '{var_type}'")
+
     def generate_is_quadruple(self):
         left_operand = self.stackOperands.pop()
         right_operand = self.whenOperands[len(self.whenOperands) - 1]
@@ -222,6 +219,17 @@ class ICG:
         quadruple = Quadruple(None, None, operator, result)
 
         self.quadrupleList.append(quadruple)
+
+    def generate_in_quadruple(self):
+        result = self.get_memory_address("local", "string")
+
+        operator = self.stackOperators.pop()
+
+        quadruple = Quadruple(None, None, operator, result)
+
+        self.quadrupleList.append(quadruple)
+        self.stackOperands.append(result)
+        self.stackTypes.append('string')
 
     def generate_gotoF(self):
         exp_type = self.stackTypes.pop()
@@ -281,7 +289,7 @@ class ICG:
         self.quadrupleList[pos].change_result(result)
 
     def fill_main_goto(self, result):
-        if self.main_goto_pos:
+        if self.main_goto_pos is not None:
             self.quadrupleList[self.main_goto_pos].change_result(result)
 
     def fill_quadruple(self, pos):
@@ -317,10 +325,11 @@ class ICG:
 
     def generate_obj_file(self, name, dir_func):
 
-        file = {}
-        file["Quadruples"] = [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList]
-        file["Dir Func"] = dir_func
-        file["Const Table"] = [(k, v) for k, v in self.constants.items()]
+        file = {
+            "Quadruples": [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList],
+            "Dir Func": dir_func,
+            "Const Table": [(k, v) for k, v in self.constants.items()]
+        }
 
         with open(f'Testing/{name}_comp.eo', 'w') as obj_file2:
             json.dump(file, obj_file2, separators=(',', ':'))
