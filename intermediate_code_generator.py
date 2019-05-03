@@ -301,19 +301,43 @@ class ICG:
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
 
-    def calculate_index_address(self, base, i, j, dope_vector, name):
-        columns = dope_vector[1]
-        rows = dope_vector[0]
+    def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
+        columns = self.get_memory_address("constants", "int", value = str(dope_vector[1]))
+        rows = self.get_memory_address("constants", "int", value = str(dope_vector[0]))
+        zero = self.get_memory_address("constants", "int", value = str(0))
+        base = self.get_memory_address("constants", "int", value = str(base))
 
-        if i >= columns or j >= rows or i < 0 or j < 0:
-            raise TypeError(f"Index [{j}][{i}] for {name} out of range")
+        # Quads para funcion base + (s1 * d2) + s2
+        quadVer1 = Quadruple(j, zero, "VER", rows)
+        quadVer2 = Quadruple(i, zero, "VER", columns)
+        
+        result_mult = self.get_memory_address("local", "int")
+        quadMult = Quadruple(j, columns, "*", result_mult)
+        
+        result_add = self.get_memory_address("local", "int")
+        quadAdd = Quadruple(result_mult, i, "+", result_add)
+        
+        result_address = self.get_memory_address("local", "int")
+        quadBaseAdd = Quadruple(base, result_add, "+", result_address)
 
-        index_address = base + (j * columns + i)
-        offset = index_address - base
-
-        # TODO: Genera quads para la funcion del index.
-
-        return index_address, offset
+        self.quadrupleList += [quadVer1, quadVer2, quadMult, quadAdd, quadBaseAdd]
+        
+        return result_address
+    
+    def calculate_vector_index_address(self, base, i, dope_vector, name):
+        size = self.get_memory_address("constants", "int", value = str(dope_vector[1]))
+        zero = self.get_memory_address("constants", "int", value = str(0))
+        base = self.get_memory_address("constants", "int", value = str(base))
+        
+        # Quads para funcion base + s1
+        quadVer = Quadruple(i, zero, "VER", size)
+        
+        result_address= self.get_memory_address("local", "int")
+        quadSum = Quadruple(i, base, "+", result_address)
+        
+        self.quadrupleList += [quadVer, quadSum]
+        
+        return result_address
 
     def generate_obj_file(self, name, dir_func):
 

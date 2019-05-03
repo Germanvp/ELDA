@@ -146,26 +146,50 @@ def p_declaracion(p):
     #    ic_generator.stackOperands.append(address)
     #    ic_generator.stackTypes.append(p_type)
 
-    # Si hay operators y el ultimo operator que hay es una asignacion,
-    # hacemos el quadr de asignacion.
-    if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
-        # Si es un vector tenemos que asignar todos los valores a todas sus
-        # casillas.
-        if dope_vector:
+
+    # Si es un vector/matriz tenemos que asignar el valor a cada posicion.
+    if dope_vector:
+        #Checamos si ya existe una asignacion para el vector/matriz.
+        if (ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']):
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
             for i in range(size - 1, -1, -1):
                 ic_generator.stackOperators.append("=")
                 ic_generator.stackOperands.append(address + i)
-
+    
                 ic_generator.stackTypes.append(p_type)
                 ic_generator.generate_quadruple()
-
         else:
-            ic_generator.stackOperands.append(address)
-            ic_generator.stackTypes.append(p_type)
-            ic_generator.generate_quadruple()
+            #Tenemos que inicializarlo como quiera.
+            if p_type == "string":
+                init_value = ""
+            elif p_type == "int":
+                init_value = 0
+            elif p_type == "float":
+                init_value = 0.0
+            elif p_type == "bool":
+                init_value = False
+                
+            init_value = ic_generator.get_memory_address("constants", p_type, value = str(init_value))
+            
+            # Vamos poniendo de ultimo al primero. 
+            # Para que el otro no se sienta solo.
+            for i in range(size - 1, -1, -1):
+                ic_generator.stackOperands.append(init_value)
+                ic_generator.stackOperators.append("=")
+                ic_generator.stackOperands.append(address + i)
+
+                ic_generator.stackTypes.append(p_type)
+                ic_generator.stackTypes.append(p_type)
+                ic_generator.generate_quadruple()
+    else:        
+        if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
+                ic_generator.stackOperands.append(address)
+                ic_generator.stackTypes.append(p_type)
+                ic_generator.generate_quadruple()
+            
+   
 
 
 def p_estatuto(p):
@@ -190,12 +214,10 @@ def p_asignacion(p):
     """
     # Con los arreglos p[1] ahora regresa (id, offset)
     # si no es un arreglo el offset es 0.
-
     variable = vars_table.search(p[1][0])
-    offset = p[1][1]
-
     if variable:
-        ic_generator.stackOperands.append(variable["address"] + offset)
+        address = f"({p[1][1]})" if (variable["is_array"]) else variable["address"]
+        ic_generator.stackOperands.append(address)
         ic_generator.stackTypes.append(variable["type"])
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
@@ -552,7 +574,7 @@ def p_factor(p):
     if len(p) == 2:
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
     # 5.
     if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['*', '/']:
@@ -636,22 +658,31 @@ def p_id(p):
         if variable["is_array"]:
             ### Aqui sacamos las filas y las columas del dope vector
             ### indices [i][j] y calculamos la direccion. Regresamos tupla por si
-            ### es asignacion.
-            j = int(p[2][0])
-            i = int(p[2][1])
+            ### es asignacion. 
             base = variable["address"]
             dope_vector = variable["dope_vector"]
 
-            address, offset = ic_generator.calculate_index_address(base, i, j, dope_vector, p[1])
-
-            ic_generator.stackOperands.append(address)
+            i = ic_generator.stackOperands.pop()
+            
+            # Si es un vector o matriz.
+            if(dope_vector[0] == 1):
+                j = 1
+                address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
+            else:
+                j = ic_generator.stackOperands.pop()
+                address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
+            
+            ic_generator.stackOperands.append(f"({address})")
             ic_generator.stackTypes.append(variable["type"])
-
-            p[0] = (p[1], offset)
+            
+            ### Regresamos el offset tambien, para que cuando busque la dir en 
+            ### la tabla de variables no se ponga la base si no base + address
+            p[0] = p[1], address 
         else:
             ic_generator.stackOperands.append(variable["address"])
             ic_generator.stackTypes.append(variable["type"])
-            p[0] = (p[1], 0)
+            p[0] = p[1], 0
+
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
 

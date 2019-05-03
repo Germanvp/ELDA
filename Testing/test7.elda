@@ -1,4 +1,11 @@
-int b = 3;
+int [2][2] b = [[1,2], [1,1]];
+int [3] bb;
+int a = 2;
+int c = 2;
+int p;
+
 void main() {
-    b = 1;
-}
+    b[1 - 1][1] = 7;
+    bb[a - c] = 420;
+    p = bb[0];
+ }
