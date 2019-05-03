@@ -2,11 +2,17 @@ int a = 0;
 
 int func(int i, int j, int k) {
     int b = 2;
-    return b;
+    a = i + j * k;
+    out("B");
+    out(b);
+    out("A");
+    out(a);
+    return a+b;
 }
 
 void winter(string p){
     p = "Winter is Here";
+    out(p);
 }
 
 void main() {

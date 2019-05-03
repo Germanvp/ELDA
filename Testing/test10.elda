@@ -1,0 +1,9 @@
+int num(int i) {
+    return i;
+}
+
+void main() {
+    int x = 0;
+    int res = num(x + 2) + (num(x + 1));
+    out(res);
+}

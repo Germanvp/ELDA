@@ -1,0 +1,20 @@
+
+int fib(int x) {
+    int return_value;
+    if (x == 0) {
+        return_value = 0;
+    }
+    if (x == 1) {
+        return_value = 1;
+    }
+    if (x != 0 and x != 1) {
+        return_value = fib(x-1) + (fib(x-2));
+    }
+    return return_value;
+}
+
+void main() {
+    string times = in();
+    out(times);
+    out(fib(20));
+}
