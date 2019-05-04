@@ -301,12 +301,15 @@ def p_for(p):
     """for : FOR ID WITH rango
     """
     # Estamos creando nuestro iterador, hasta ahorita solo puede ser int.
-    # es el i en for i in range(x,y)
+    # es el i en for i with range(x,y)
     if not vars_table.initialized:
         vars_table.initialize()
 
     address = ic_generator.get_memory_address("local", "int")
     vars_table.insert(p[2], "int", False, False, address)
+
+    temp = ic_generator.stackOperands[-1]
+    ic_generator.stackOperands.pop()
 
     # Creamos el quadruplo de la asignacion del iterador con valor en el que empieza.
     ic_generator.stackOperands.append(address)
@@ -314,6 +317,28 @@ def p_for(p):
     ic_generator.stackOperators.append("=")
 
     ic_generator.generate_quadruple()
+
+
+
+    # Crearemos la condicion para que se detenga. Solo con ints por mientras.
+    # ID < N
+    ic_generator.stackOperands.append(address)
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("<")
+
+    ic_generator.stackOperands.append(temp)
+    # print(p[4])
+    # print(ic_generator.constants)
+    # print(ic_generator.stackOperands)
+    # print(vars_table.table)
+    # const_address = ic_generator.stackOperands.pop() # ic_generator.get_memory_address("constants", "int", 1, p[4])
+    #
+    # ic_generator.stackTypes.append("int")
+    # ic_generator.stackOperands.append(const_address)
+
+    ic_generator.generate_quadruple()
+
+    ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
 
     # Creamos el quadruplo de la suma del iterador mas 1.
     ic_generator.stackOperands.append(address)
@@ -327,24 +352,9 @@ def p_for(p):
 
     ic_generator.generate_quadruple()
 
-    ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
-
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
     ic_generator.stackOperators.append("=")
-
-    ic_generator.generate_quadruple()
-
-    # Crearemos la condicion para que se detenga. Solo con ints por mientras.
-    # ID < N
-    ic_generator.stackOperands.append(address)
-    ic_generator.stackTypes.append("int")
-    ic_generator.stackOperators.append("<")
-
-    const_address = ic_generator.get_memory_address("constants", "int", 1, p[4])
-
-    ic_generator.stackTypes.append("int")
-    ic_generator.stackOperands.append(const_address)
 
     ic_generator.generate_quadruple()
 
@@ -387,7 +397,7 @@ def p_ciclo(p):
 
 
 def p_rango(p):
-    """rango : RANGE '(' expresion ',' INT ')'
+    """rango : RANGE '(' expresion ',' expresion ')'
     """
     # Regresamos el valor maximo que puede ser el iterador del if, 
     # esto para usarlo y crear la condicion. Ej. i < 10.

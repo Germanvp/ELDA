@@ -1,4 +1,7 @@
 int b = 3;
 void main() {
-    b = 1;
+    if ( 1 >= 1 ) {
+        b = 1;
+    }
+    out(b);
 }

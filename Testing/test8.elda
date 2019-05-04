@@ -3,12 +3,13 @@ int b = 3;
 int [2][2] p;
 int[7] x = [1,2,3,4,5,6,7];
 
-int ok(){
+int ok(int kl){
     p[1][0] = 405000;
     return 2;
 }
 void main() {
     b = a[1][0] + 1;
+    ok(a[0]);
     a[1][2] = 100;
     out(a[0][0]);
 }

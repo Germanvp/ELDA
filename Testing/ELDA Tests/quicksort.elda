@@ -1,0 +1,45 @@
+int[10] arr = [4, 3, 5, 2, 7, 8, 1, 10, 9, 6];
+
+int partition(int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    int temp;
+    int k;
+
+    for j with range(low, high - 1) {
+        if (arr[j] <= pivot) {
+            i = i + 1;
+            temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+    }
+
+    k = i + 1;
+    temp = arr[k];
+    arr[k] = arr[high];
+    arr[high] = temp;
+    return k;
+}
+
+void quicksort(int low, int high) {
+    int pi;
+    if (low < high) {
+        pi = partition(low, high);
+
+        quicksort(low, pi - 1);
+        quicksort(pi + 1, high);
+    }
+}
+
+void printArray(int size) {
+    for i with range(0, size) {
+        out(arr[i]);
+    }
+}
+
+void main() {
+    int n = 5;
+    quicksort(0, n - 1);
+    printArray(10);
+}

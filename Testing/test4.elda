@@ -4,7 +4,7 @@ int c = 0;
 
 void main(){
     while ( c < b){
-        for i with range(-1, 100){
+        for i with range(0, 100){
             out(i);
             a = b;
         
