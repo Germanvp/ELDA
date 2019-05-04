@@ -5,16 +5,22 @@ int d = 1;
 bool isAble = false;
 float fVariable = 13.45;
 
-int getValues(int param) {
+int getValues(int param, int param2, float param3) {
     float local = a * (b-c/d) + 12 / 13;
     bool what = a + a * b < c / (d + 1);
+    a = 22;
+    out(21);
+    return a;
 }
 
 void main() {
-    if (a*b > c) {
-        a = 12;
+    out(a*b);
+    out(c);
+    if (20 == 20) {
+        a = getValues(2, 1, 2.0);
         out("Hello world");
     } else {
         b = a * c;
+        out(b);
     }
 }

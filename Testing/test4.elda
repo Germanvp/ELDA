@@ -1,20 +1,15 @@
 int a = 1;
 int b = 1;
-int c = 1;
+int c = 0;
+
 void main(){
-
-
-    while ( c < b){
-    
-    
+    while ( c <= b){
         for i with range(0, 100){
-        
+            out(i);
             a = b;
         
         }
         c = 99;
     }
-    
     b = c;
-
 }

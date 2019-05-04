@@ -1,17 +1,23 @@
 int i = 1;
 
 float a = 0.0;
-float b = 0.0;
-float c = 0.0;
+float b = 2.0;
+float c = 3.0;
 float d = 0.0;
 
 void main() {
     when i {
         is 1 {
             a = b * c;
+            out(a);
             when a {
-                is 1.0 {
+                is 6.0 {
                     b = d + 1;
+                    out(b);
+                }
+                is 4.0 {
+                    d = 34.0;
+                    out(d);
                 }
             }
         }

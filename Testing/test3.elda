@@ -16,14 +16,14 @@ void main(){
     a = b + c * (d - e / f) * h;
     b = e - f;
     
-    while ( a * b - c > d * e / (g + h)){
+    while ( a < 10 ){
+        out(a);
         h = j * k + b;
-        if ( b < h){
+        if ( b < h ){
             b = h + j;
             
             while ( b > a + c){
-                b = b - j;            
-            
+                b = b - j;
             }
 
         } else {
@@ -31,7 +31,7 @@ void main(){
 
         
         }
-
+        a = a + 1;
     
     }
     f = a + b;

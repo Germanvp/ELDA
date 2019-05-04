@@ -19,11 +19,15 @@ class Operators(Enum):
     DIVISION = "/"
     GRT_THAN = ">"
     LWR_THAN = "<"
+    GRT_EQ_THAN = ">="
+    LWR_EQ_THAN = "<="
     EQUAL = "=="
     AND = "and"
     OR = "or"
     ASSIGN = "="
     OUT = "out"
+    RETURN = "return"
+    DIFF = "!="
 
 
 class SemanticCube:
@@ -44,11 +48,15 @@ class SemanticCube:
                     Operators.DIVISION: 'float',
                     Operators.GRT_THAN: 'bool',
                     Operators.LWR_THAN: 'bool',
+                    Operators.GRT_EQ_THAN: 'bool',
+                    Operators.LWR_EQ_THAN: 'bool',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'int',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'int'
                 },
                 'float': {
                     Operators.SUM: 'float',
@@ -57,11 +65,15 @@ class SemanticCube:
                     Operators.DIVISION: 'float',
                     Operators.GRT_THAN: 'bool',
                     Operators.LWR_THAN: 'bool',
+                    Operators.GRT_EQ_THAN: 'bool',
+                    Operators.LWR_EQ_THAN: 'bool',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -70,11 +82,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -83,11 +99,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 }
             },
             'float': {
@@ -98,11 +118,15 @@ class SemanticCube:
                     Operators.DIVISION: 'float',
                     Operators.GRT_THAN: 'bool',
                     Operators.LWR_THAN: 'bool',
+                    Operators.GRT_EQ_THAN: 'bool',
+                    Operators.LWR_EQ_THAN: 'bool',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'float': {
                     Operators.SUM: 'float',
@@ -111,11 +135,15 @@ class SemanticCube:
                     Operators.DIVISION: 'float',
                     Operators.GRT_THAN: 'bool',
                     Operators.LWR_THAN: 'bool',
+                    Operators.GRT_EQ_THAN: 'bool',
+                    Operators.LWR_EQ_THAN: 'bool',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'float',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'float'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -124,11 +152,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -137,11 +169,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 }
             },
             'bool': {
@@ -152,11 +188,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'float': {
                     Operators.SUM: 'Error',
@@ -165,11 +205,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -178,11 +222,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'bool',
                     Operators.OR: 'bool',
                     Operators.ASSIGN: 'bool',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'bool'
                 },
                 'string': {
                     Operators.SUM: 'Error',
@@ -191,11 +239,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 }
             },
             'string': {
@@ -206,11 +258,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'float': {
                     Operators.SUM: 'string',
@@ -219,11 +275,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'bool': {
                     Operators.SUM: 'Error',
@@ -232,11 +292,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'Error',
+                    Operators.DIFF: 'Error',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'Error',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'Ret_Error'
                 },
                 'string': {
                     Operators.SUM: 'string',
@@ -245,11 +309,15 @@ class SemanticCube:
                     Operators.DIVISION: 'Error',
                     Operators.GRT_THAN: 'Error',
                     Operators.LWR_THAN: 'Error',
+                    Operators.GRT_EQ_THAN: 'Error',
+                    Operators.LWR_EQ_THAN: 'Error',
                     Operators.EQUAL: 'bool',
+                    Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
                     Operators.ASSIGN: 'string',
-                    Operators.OUT: 'Error'
+                    Operators.OUT: 'Error',
+                    Operators.RETURN: 'string'
                 }
             }
         }
@@ -263,8 +331,10 @@ class SemanticCube:
         :return: Result type if valid, raises TypeError otherwise
         """
         
-        if self.semantic_cube[left_type][right_type][operator] is not 'Error':
+        if 'Error' not in self.semantic_cube[left_type][right_type][operator]:
             return self.semantic_cube[left_type][right_type][operator]
+        if self.semantic_cube[left_type][right_type][operator] == 'Ret_Error':
+            raise TypeError(f"Type mismatch: Cannot return type '{right_type}' from function of type '{left_type}'")
         raise TypeError(
             f"Type mismatch: Cannot apply operator '{repr(operator)}' to types '{left_type}' and '{right_type}'")
 

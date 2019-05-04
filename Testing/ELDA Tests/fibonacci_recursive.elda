@@ -1,0 +1,17 @@
+int fibonacci(int x) {
+    int return_value;
+    if (x == 0) {
+        return_value = 0;
+    }
+    if (x == 1) {
+        return_value = 1;
+    }
+    if (x != 0 and x != 1) {
+        return_value = fibonacci(x-1) + (fibonacci(x-2));
+    }
+    return return_value;
+}
+
+void main() {
+    out(fibonacci(10));
+}
