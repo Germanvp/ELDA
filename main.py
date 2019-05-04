@@ -47,6 +47,14 @@ try:
             vm.load_obj_file("Testing/" + name + "_comp")
 
 except TypeError as ex:
+    # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
+    # pos = 1
+    # print("    operator\top1\top2\tresult")
+    # for i in parser.ic_generator.quadrupleList:
+    #     print(pos, repr(i))
+    #     pos += 1
+    # for k, v in parser.ic_generator.constants.items():
+    #     print(k, v)
     print(ex)
 except FileNotFoundError as ex:
     print(ex)

@@ -71,7 +71,7 @@ class SemanticCube:
                     Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
-                    Operators.ASSIGN: 'Error',
+                    Operators.ASSIGN: 'int',
                     Operators.OUT: 'Error',
                     Operators.RETURN: 'Ret_Error'
                 },
@@ -124,7 +124,7 @@ class SemanticCube:
                     Operators.DIFF: 'bool',
                     Operators.AND: 'Error',
                     Operators.OR: 'Error',
-                    Operators.ASSIGN: 'Error',
+                    Operators.ASSIGN: 'float',
                     Operators.OUT: 'Error',
                     Operators.RETURN: 'Ret_Error'
                 },
@@ -330,7 +330,6 @@ class SemanticCube:
         :param operator: Operator being applied to the types
         :return: Result type if valid, raises TypeError otherwise
         """
-        
         if 'Error' not in self.semantic_cube[left_type][right_type][operator]:
             return self.semantic_cube[left_type][right_type][operator]
         if self.semantic_cube[left_type][right_type][operator] == 'Ret_Error':
