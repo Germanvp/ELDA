@@ -142,8 +142,6 @@ def p_declaracion(p):
         address = ic_generator.get_memory_address("local", p_type, size)
 
     vars_table.insert(p[2], p_type, is_array, dope_vector, address)
-    #    ic_generator.stackOperands.append(address)
-    #    ic_generator.stackTypes.append(p_type)
 
     # Si es un vector/matriz tenemos que asignar el valor a cada posicion.
     if dope_vector:
@@ -327,7 +325,9 @@ def p_for(p):
     vars_table.insert(p[2], "int", False, False, address)
 
     temp = ic_generator.stackOperands[-1]
+    temp_type = ic_generator.stackTypes[-1]
     ic_generator.stackOperands.pop()
+    ic_generator.stackTypes.pop()
 
     # Creamos el quadruplo de la asignacion del iterador con valor en el que empieza.
     ic_generator.stackOperands.append(address)
@@ -343,6 +343,7 @@ def p_for(p):
     ic_generator.stackOperators.append("<")
 
     ic_generator.stackOperands.append(temp)
+    ic_generator.stackTypes.append(temp_type)
 
     ic_generator.generate_quadruple()
 
@@ -690,6 +691,7 @@ def p_id(p):
             dope_vector = variable["dope_vector"]
 
             i = ic_generator.stackOperands.pop()
+            ic_generator.stackTypes.pop()
 
             # Si es un vector o matriz.
             if dope_vector[0] == 1:
@@ -697,6 +699,7 @@ def p_id(p):
                 address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
             else:
                 j = ic_generator.stackOperands.pop()
+                ic_generator.stackTypes.pop()
                 address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
 
             ic_generator.stackOperands.append(f"({address})")

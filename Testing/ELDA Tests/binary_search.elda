@@ -1,0 +1,34 @@
+int[5] arr = [2, 3, 4, 10, 40];
+
+int binary_search(int l, int r, int x) {
+    int mid;
+    int return_value = -1;
+
+    if (r >= l) {
+        mid = l + (r - l) / 2;
+
+        if (arr[mid] == x) {
+            return_value = mid;
+        }
+
+        if (arr[mid] > x) {
+            return_value = binary_search(l, mid - 1, x);
+        }
+
+        if (arr[mid] < x) {
+            return_value = binary_search(mid + 1, r, x);
+        }
+    }
+    return return_value;
+}
+
+void main() {
+    int x = 10;
+    int n = 5;
+    int result = binary_search(0, n - 1, x);
+    if (result != -1) {
+        out("Element found at position: " + result);
+    } else {
+        out("Element not found in the array");
+    }
+}

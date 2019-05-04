@@ -1,0 +1,71 @@
+int[5] vectorA = [1,2,3,4,5];
+int[5] vectorB = [5,4,3,2,1];
+
+int[5][5] matrixA = [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15],[16,17,18,19,20],[21,22,23,24,25]];
+int[5][5] matrixB = [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15],[16,17,18,19,20],[21,22,23,24,25]];
+
+int[5][5] mult;
+int[5][5] trans;
+int[5] sum;
+
+void print_matrix(int w) {
+    string row = "";
+    for i with range(0, 5) {
+        for j with range(0, 5) {
+            if (w == 1) {
+                row = row + (mult[i][j]) + " ";
+            } else {
+                row = row + (trans[i][j]) + " ";
+            }
+        }
+        out(row);
+        row = "";
+    }
+}
+
+void print_vector() {
+    string row = "";
+    for i with range(0, 5) {
+        row = row + (sum[i]) + " ";
+    }
+    out(row);
+    row = "";
+}
+
+void multiply_matrixes() {
+    for i with range(0, 5) {
+        for j with range(0, 5) {
+            for k with range(0, 5) {
+                mult[i][j] = (mult[i][j]) + (matrixA[i][k]) * (matrixB[k][j]);
+            }
+        }
+    }
+    print_matrix(1);
+}
+
+void sum_vectors() {
+    for i with range(0, 5) {
+        sum[i] = (vectorA[i]) + (vectorB[i]);
+    }
+    print_vector();
+}
+
+void transpose_matrix() {
+    for i with range(0, 5) {
+        for j with range(0, 5) {
+            trans[j][i] = matrixA[i][j];
+        }
+    }
+    print_matrix(2);
+}
+
+void main() {
+    out("Matrix multiplication of 5x5");
+    multiply_matrixes();
+
+    out("Vector sum");
+    sum_vectors();
+
+    out("Transposed matrix of matrixA");
+    transpose_matrix();
+}

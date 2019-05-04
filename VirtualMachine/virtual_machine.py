@@ -84,7 +84,8 @@ class VirtualMachine:
             elif operator == "=":
                 # self.active_memory.insert_into_memory(op1, result)
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
-                memory_result[result] = memory1[op1]
+                res_type = self.get_type(result)
+                memory_result[result] = res_type(memory1[op1])
                 ip += 1
             elif operator == ">":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
@@ -237,3 +238,18 @@ class VirtualMachine:
         :return: A list of values
         """
         return self.process_address(op1), self.process_address(op2), self.process_address(result)
+
+    def get_type(self, address):
+        """
+        Returns the appropriate type of the value held in the address
+        :param address: Address that holds the value
+        :return: The type
+        """
+        if 5000 <= address < 10000 or 20000 <= address < 25000 or 35000 <= address < 40000:
+            return int
+        elif 10000 <= address < 15000 or 25000 <= address < 30000 or 40000 <= address < 45000:
+            return float
+        elif 15000 <= address < 17500 or 30000 <= address < 32500 or 45000 <= address < 47500:
+            return str
+        else:
+            return bool
