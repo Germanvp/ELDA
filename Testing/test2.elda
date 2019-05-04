@@ -16,7 +16,7 @@ int getValues(int param, int param2, float param3) {
 void main() {
     out(a*b);
     out(c);
-    if (not 20 == 20) {
+    if (20 == 20) {
         a = getValues(2, 1, 2.0);
         out("Hello world");
     } else {

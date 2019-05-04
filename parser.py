@@ -35,7 +35,6 @@ def p_program(p):
     ic_generator.fill_main_goto(vars_table.table["main"]["func_begin"])
 
 
-
 def p_program_d(p):
     """program_d : declaracion program_d
                  | program_f
@@ -131,7 +130,6 @@ def p_declaracion(p):
         dope_vector = p[1][1]
         p_type = p[1][0]
         size = dope_vector[0] * dope_vector[1]
-
     else:
         is_array = False
         dope_vector = None
@@ -147,22 +145,21 @@ def p_declaracion(p):
     #    ic_generator.stackOperands.append(address)
     #    ic_generator.stackTypes.append(p_type)
 
-
     # Si es un vector/matriz tenemos que asignar el valor a cada posicion.
     if dope_vector:
-        #Checamos si ya existe una asignacion para el vector/matriz.
-        if (ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']):
+        # Checamos si ya existe una asignacion para el vector/matriz.
+        if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
             for i in range(size - 1, -1, -1):
                 ic_generator.stackOperators.append("=")
                 ic_generator.stackOperands.append(address + i)
-    
+
                 ic_generator.stackTypes.append(p_type)
                 ic_generator.generate_quadruple()
         else:
-            #Tenemos que inicializarlo como quiera.
+            # Tenemos que inicializarlo como quiera.
             if p_type == "string":
                 init_value = ""
             elif p_type == "int":
@@ -171,9 +168,9 @@ def p_declaracion(p):
                 init_value = 0.0
             elif p_type == "bool":
                 init_value = False
-                
-            init_value = ic_generator.get_memory_address("constants", p_type, value = str(init_value))
-            
+
+            init_value = ic_generator.get_memory_address("constants", p_type, value=str(init_value))
+
             # Vamos poniendo de ultimo al primero. 
             # Para que el otro no se sienta solo.
             for i in range(size - 1, -1, -1):
@@ -184,13 +181,11 @@ def p_declaracion(p):
                 ic_generator.stackTypes.append(p_type)
                 ic_generator.stackTypes.append(p_type)
                 ic_generator.generate_quadruple()
-    else:        
+    else:
         if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
-                ic_generator.stackOperands.append(address)
-                ic_generator.stackTypes.append(p_type)
-                ic_generator.generate_quadruple()
-            
-   
+            ic_generator.stackOperands.append(address)
+            ic_generator.stackTypes.append(p_type)
+            ic_generator.generate_quadruple()
 
 
 def p_estatuto(p):
@@ -199,7 +194,8 @@ def p_estatuto(p):
                 | when
                 | in ';'
                 | out
-                | ciclo
+                | ciclo_w
+                | ciclo_f
                 | llamada ';'
     """
 
@@ -340,8 +336,6 @@ def p_for(p):
 
     ic_generator.generate_quadruple()
 
-
-
     # Crearemos la condicion para que se detenga. Solo con ints por mientras.
     # ID < N
     ic_generator.stackOperands.append(address)
@@ -349,40 +343,15 @@ def p_for(p):
     ic_generator.stackOperators.append("<")
 
     ic_generator.stackOperands.append(temp)
-    # print(p[4])
-    # print(ic_generator.constants)
-    # print(ic_generator.stackOperands)
-    # print(vars_table.table)
-    # const_address = ic_generator.stackOperands.pop() # ic_generator.get_memory_address("constants", "int", 1, p[4])
-    #
-    # ic_generator.stackTypes.append("int")
-    # ic_generator.stackOperands.append(const_address)
 
     ic_generator.generate_quadruple()
 
     ic_generator.stackJumps.append(len(ic_generator.quadrupleList))
 
-    # Creamos el quadruplo de la suma del iterador mas 1.
-    ic_generator.stackOperands.append(address)
-    ic_generator.stackTypes.append("int")
-
-    const_address = ic_generator.get_memory_address("constants", "int", 1, '1')
-
-    ic_generator.stackOperands.append(const_address)
-    ic_generator.stackTypes.append("int")
-    ic_generator.stackOperators.append("+")
-
-    ic_generator.generate_quadruple()
-
-    ic_generator.stackOperands.append(address)
-    ic_generator.stackTypes.append("int")
-    ic_generator.stackOperators.append("=")
-
-    ic_generator.generate_quadruple()
-
     # Genera el GotoF. Pues si verdad, que otra cosa puede hacer una funcion 
     # que se llame generate gotoF. 
     ic_generator.generate_gotoF()
+    p[0] = p[2]
 
 
 def p_while_keyword(p):
@@ -401,11 +370,48 @@ def p_while(p):
     ic_generator.generate_gotoF()
 
 
-def p_ciclo(p):
-    """ciclo : for bloque_simp
-             | while bloque_simp
+def p_ciclo_w(p):
+    """ciclo_w : while bloque_simp
 
     """
+    end = ic_generator.stackJumps.pop()
+    revisit = ic_generator.stackJumps.pop()
+
+    # LLenamos el goTo que creamos para que vuelva a checar la cond. del loop.
+    ic_generator.generate_goto()
+    ic_generator.fill_goto(revisit)
+
+    # Llenamos el goToF que creamos para cuando no se cumpla la condicion
+    # con la linea a la que tiene que saltar.
+    ic_generator.fill_quadruple(end)
+
+
+def p_ciclo_f(p):
+    """ciclo_f : for bloque_simp
+    """
+    variable = vars_table.current_scope["vars"][p[1]]
+    if variable is not None:
+        address = variable["address"]
+    else:
+        raise TypeError(f"Variable {p[1]} not declared")
+    # Creamos el quadruplo de la suma del iterador mas 1.
+    ic_generator.stackOperands.append(address)
+    ic_generator.stackTypes.append("int")
+
+    const_address = ic_generator.get_memory_address("constants", "int", 1, '1')
+
+    ic_generator.stackOperands.append(const_address)
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("+")
+
+    ic_generator.generate_quadruple()
+
+    ic_generator.stackOperands.append(address)
+    ic_generator.stackTypes.append("int")
+    ic_generator.stackOperators.append("=")
+
+    ic_generator.generate_quadruple()
+
     end = ic_generator.stackJumps.pop()
     revisit = ic_generator.stackJumps.pop()
 
@@ -675,28 +681,30 @@ def p_id(p):
 
     if variable:
         if variable["is_array"]:
-            ### Aqui sacamos las filas y las columas del dope vector
-            ### indices [i][j] y calculamos la direccion. Regresamos tupla por si
-            ### es asignacion. 
+            if p[2] is None:
+                raise TypeError(f"Array values must be followed by an index, at array call for '{p[1]}'")
+            # Aqui sacamos las filas y las columas del dope vector
+            # indices [i][j] y calculamos la direccion. Regresamos tupla por si
+            # es asignacion.
             base = variable["address"]
             dope_vector = variable["dope_vector"]
 
             i = ic_generator.stackOperands.pop()
-            
+
             # Si es un vector o matriz.
-            if(dope_vector[0] == 1):
+            if dope_vector[0] == 1:
                 j = 1
                 address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
             else:
                 j = ic_generator.stackOperands.pop()
                 address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
-            
+
             ic_generator.stackOperands.append(f"({address})")
             ic_generator.stackTypes.append(variable["type"])
-            
-            ### Regresamos el offset tambien, para que cuando busque la dir en 
-            ### la tabla de variables no se ponga la base si no base + address
-            p[0] = p[1], address 
+
+            # Regresamos el offset tambien, para que cuando busque la dir en
+            # la tabla de variables no se ponga la base si no base + address
+            p[0] = p[1], address
         else:
             ic_generator.stackOperands.append(variable["address"])
             ic_generator.stackTypes.append(variable["type"])

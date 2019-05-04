@@ -45,7 +45,7 @@ class VirtualMachine:
         if value == 'false' or value == 'true':
             return bool(value)
         elif value[0] == '"' and value[-1] == '"':
-            return str(value)
+            return str(value[1:-1])
         elif '.' in value:
             return float(value)
         try:
@@ -64,7 +64,10 @@ class VirtualMachine:
             op1, op2, result = self.process_addresses(op1, op2, result)
             if operator == "+":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
-                memory_result[result] = memory1[op1] + memory2[op2]
+                if (isinstance(memory1[op1], str) and not isinstance(memory2[op2], str)) or (isinstance(memory2[op2], str) and not isinstance(memory1[op1], str)):
+                    memory_result[result] = str(memory1[op1]) + str(memory2[op2])
+                else:
+                    memory_result[result] = memory1[op1] + memory2[op2]
                 ip += 1
             elif operator == "-":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
@@ -178,9 +181,9 @@ class VirtualMachine:
                 else:
                     break
             elif operator == "VER":
-                memory1, memory2, memory_result = self.get_memories(int(op1), int(op2), int(result))
+                memory1, memory2, memory_result = self.get_memories(op1, op2, result)
                 # Checamos si el numero esta entre el rango de esa dimension.
-                if not (int(memory2[op2]) <= int(memory1[op1]) < int(memory_result[result])):
+                if not (memory2[op2] <= memory1[op1] < memory_result[result]):
                     raise TypeError(
                         f"Index {int(memory1[op1])} not in range {int(memory2[op2])}-{int(memory_result[result])}")
 
