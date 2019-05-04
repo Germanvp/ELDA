@@ -5,4 +5,7 @@ parsetab.py
 .vscode/*
 __pycache__/*
 __pycache__/lexer.cpython-36.pyc
-__pycache__/parser.cpython-36.pyc
+__pycache__/parsetab.cpython-36.pyc
+*.cpython-36.pyc
+VirtualMachine/__pycache__/*
+*.eo
