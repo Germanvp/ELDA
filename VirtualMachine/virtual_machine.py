@@ -61,6 +61,7 @@ class VirtualMachine:
             op1 = quadruple_list[ip][1]
             op2 = quadruple_list[ip][2]
             result = quadruple_list[ip][3]
+            op1, op2, result = self.process_addresses(op1, op2, result)
             if operator == "+":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
                 memory_result[result] = memory1[op1] + memory2[op2]
@@ -146,7 +147,8 @@ class VirtualMachine:
                 self.main_memory.add_scope(parent, function["vars_count"])
                 ip += 1
             elif operator == "GOSUB":
-                self.main_memory.active_record = self.main_memory.memory_execution[list(self.main_memory.memory_execution.keys())[-1]]
+                self.main_memory.active_record = self.main_memory.memory_execution[
+                    list(self.main_memory.memory_execution.keys())[-1]]
 
                 if int(op2) == dir_func[op1]["params_count"]:
                     if self.main_memory.active_record.check_params(dir_func[op1]["params_type"], params):
@@ -175,12 +177,20 @@ class VirtualMachine:
                     return return_value
                 else:
                     break
+            elif operator == "VER":
+                memory1, memory2, memory_result = self.get_memories(int(op1), int(op2), int(result))
+                # Checamos si el numero esta entre el rango de esa dimension.
+                if not (int(memory2[op2]) <= int(memory1[op1]) < int(memory_result[result])):
+                    raise TypeError(
+                        f"Index {int(memory1[op1])} not in range {int(memory2[op2])}-{int(memory_result[result])}")
+
+                ip += 1
 
     def get_memory(self, address):
         """
         Retrieves the correct memory based on the given address
-        :param address:
-        :return:
+        :param address: The address of the value
+        :return: The correct memory in which to look for the value
         """
         if address is None:
             return None
@@ -193,10 +203,34 @@ class VirtualMachine:
 
     def get_memories(self, op1, op2, result):
         """
-
-        :param op1:
-        :param op2:
-        :param result:
-        :return:
+        Helper for calling the get_memory function over all necessary
+        values.
+        :param op1: The address for the first operator
+        :param op2: The address for the second operator
+        :param result: The address for the result
+        :return: A list of values
         """
         return self.get_memory(op1), self.get_memory(op2), self.get_memory(result)
+
+    def process_address(self, address):
+        """
+        Transforms parenthesis addresses into actual value address and returns value
+        :param address: The address to be transformed
+        :return: The actual address where the value is stored
+        """
+        if isinstance(address, str) and address[0] == '(':
+            address_temp = int(address[1:-1])
+            memory = self.get_memory(address_temp)
+            return memory[address_temp]
+        else:
+            return address
+
+    def process_addresses(self, op1, op2, result):
+        """
+        Helper that applies the process address function to all addresses
+        :param op1: The address for the first operator
+        :param op2: The address for the second operator
+        :param result: The address for the result
+        :return: A list of values
+        """
+        return self.process_address(op1), self.process_address(op2), self.process_address(result)
