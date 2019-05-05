@@ -1,0 +1,3 @@
+[console_scripts]
+elda = elda.main:elda
+

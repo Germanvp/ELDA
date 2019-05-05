@@ -13,9 +13,9 @@ void print_matrix(int w) {
     for i with range(0, 5) {
         for j with range(0, 5) {
             if (w == 1) {
-                row = row + (mult[i][j]) + " ";
+                row = row + mult[i][j] + " ";
             } else {
-                row = row + (trans[i][j]) + " ";
+                row = row + trans[i][j] + " ";
             }
         }
         out(row);
@@ -26,7 +26,7 @@ void print_matrix(int w) {
 void print_vector() {
     string row = "";
     for i with range(0, 5) {
-        row = row + (sum[i]) + " ";
+        row = row + sum[i] + " ";
     }
     out(row);
     row = "";
@@ -36,7 +36,7 @@ void multiply_matrixes() {
     for i with range(0, 5) {
         for j with range(0, 5) {
             for k with range(0, 5) {
-                mult[i][j] = (mult[i][j]) + (matrixA[i][k]) * (matrixB[k][j]);
+                mult[i][j] = mult[i][j] + matrixA[i][k] * matrixB[k][j];
             }
         }
     }
@@ -45,7 +45,7 @@ void multiply_matrixes() {
 
 void sum_vectors() {
     for i with range(0, 5) {
-        sum[i] = (vectorA[i]) + (vectorB[i]);
+        sum[i] = vectorA[i] + vectorB[i];
     }
     print_vector();
 }
