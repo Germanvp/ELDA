@@ -1,0 +1,16 @@
+int[2][5] a = [[1,2,3,4,5], [6,7,8,9,10]];
+int b = 5 + 0 + 10;
+
+void standard_deviation(){
+    string w = "Winter is Here";
+    out(std(a), "STD");
+}
+void main() {
+    float c = mean(a);
+    out("King of the Nortttfh");
+    out(c, "MEAN");
+    out(min(a), "MIN");
+    out(max(a), "MAX");
+    out(median(a), "MEDIAN");
+    standard_deviation();
+}
