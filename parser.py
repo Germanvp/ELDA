@@ -434,7 +434,7 @@ def p_rango(p):
 
 
 def p_llamada(p):
-    """llamada : llamada_id '(' llamadaD ')'
+    """llamada : llamada_id lpar llamadaD rpar
     """
     if not vars_table.initialized:
         vars_table.initialize()
@@ -578,7 +578,7 @@ def p_exp(p):
 
 def p_termino(p):
     """termino : factor comp_oper termino
-                | factor
+               | factor
     """
     # Solo regresamos primer factor, es por mientras.
     if len(p) == 2:
@@ -718,14 +718,26 @@ def p_id(p):
 
 
 def p_indice(p):
-    """indice : '[' expresion ']'
-              | '[' expresion ']' '[' expresion ']'
+    """indice : lbracket expresion rbracket
+              | lbracket expresion rbracket lbracket expresion rbracket
               | empty
     """
     if len(p) > 4:
         p[0] = (p[2], p[5])
     elif len(p) > 2:
         p[0] = (0, p[2])
+
+
+def p_lbracket(p):
+    """lbracket : '['
+    """
+    ic_generator.stackOperators.append('(')
+
+
+def p_rbracket(p):
+    """rbracket : ']'
+    """
+    ic_generator.stackOperators.pop()
 
 
 def p_arreglo(p):
