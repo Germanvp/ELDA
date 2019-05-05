@@ -8,9 +8,9 @@ Created on Fri Mar  8 07:10:43 2019
 """
 
 from ply import yacc
-from lexer import tokens
-from vars_table import VarsTable
-from intermediate_code_generator import ICG
+from .vars_table import VarsTable
+from .intermediate_code_generator import ICG
+from .lexer import tokens
 
 vars_table = VarsTable()
 ic_generator = ICG()

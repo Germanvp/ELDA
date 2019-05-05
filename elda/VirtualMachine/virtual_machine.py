@@ -6,8 +6,7 @@ Created on Thu Apr 25 16:45:52 2019
 @author: German
 """
 
-from VirtualMachine.virtual_memory import VirtualMemory
-from VirtualMachine.main_memory import MainMemory
+from .main_memory import MainMemory
 import json
 import ast
 
@@ -23,7 +22,7 @@ class VirtualMachine:
         :param file_name:
         :return:
         """
-        file = open(file_name + ".eo", "r")
+        file = open(file_name, "r")
         data = json.load(file)
 
         for const_item in data["Const Table"]:

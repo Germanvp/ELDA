@@ -5,7 +5,7 @@ Created on Sun Mar 24 14:37:32 2019
 
 @author: Juan Manuel Perez & German Villacorta
 """
-from semantic_cube import SemanticCube, Operators
+from .semantic_cube import SemanticCube, Operators
 import json
 
 
@@ -355,5 +355,5 @@ class ICG:
             "Const Table": [(k, v) for k, v in self.constants.items()]
         }
 
-        with open(f'Testing/{name}_comp.eo', 'w') as obj_file2:
+        with open(f'{name[:-5]}.eo', 'w') as obj_file2:
             json.dump(file, obj_file2, separators=(',', ':'))
