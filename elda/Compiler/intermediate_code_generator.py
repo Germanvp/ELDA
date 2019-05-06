@@ -310,22 +310,29 @@ class ICG:
         self.quadrupleList.append(quadruple)
 
     def generate_analysis_quadruple(self):
-
-        array_pointer = self.stackOperands.pop()
         function = self.stackOperators.pop().upper()
 
-        if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN']:
+        if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN', 'SIZE']:
+            array_pointer = self.stackOperands.pop()
             # El tipo del arreglo que usaremos para calcular.
             array_type = self.stackTypes.pop()
 
-            if (array_type == "string"):
-                raise TypeError(f"cannot perform reduce with flexible type")
+            if array_type == "string" or array_type == "bool":
+                raise TypeError(f"Cannot perform reduce with flexible type")
 
             result = self.get_memory_address("local", "float")
             self.stackOperands.append(result)
             self.stackTypes.append("float")
 
             quadruple = Quadruple(array_pointer, None, function, result)
+            self.quadrupleList.append(quadruple)
+        elif function in ['TYPE']:
+            var = self.stackOperands.pop()
+            result = self.get_memory_address("local", "string")
+            self.stackOperands.append(result)
+            self.stackTypes.append("string")
+
+            quadruple = Quadruple(var, None, function, result)
             self.quadrupleList.append(quadruple)
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):

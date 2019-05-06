@@ -39,6 +39,8 @@ reserved = {
             'var': 'VAR',
             'min': 'MIN',
             'max': 'MAX',
+            'size': 'SIZE',
+            'type': 'TYPE',
             'median': 'MEDIAN',
         }
 

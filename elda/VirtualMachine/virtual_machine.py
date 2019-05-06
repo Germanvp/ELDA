@@ -246,6 +246,31 @@ class VirtualMachine:
 
                 memory_result[result] = np.mean(variable)
                 ip += 1
+            elif operator == "SIZE":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+
+                memory_result[result] = array_shape[0] * array_shape[1]
+                ip += 1
+            elif operator == "TYPE":
+                memory_result = self.get_memory(result)
+
+                result_value = self.get_type(op1)
+                if result_value is int:
+                    result_value = "int"
+                elif result_value is float:
+                    result_value = "float"
+                elif result_value is str:
+                    result_value = "string"
+                else:
+                    result_value = "bool"
+
+                memory_result[result] = result_value
+                ip += 1
             elif operator == "STD":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)

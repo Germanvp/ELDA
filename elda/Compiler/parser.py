@@ -497,7 +497,7 @@ def p_llamada_analisis(p):
             ic_generator.generate_analysis_quadruple()
         else:
             raise TypeError(f"Parameter for function '{p[1]}' must be an array")
-        
+
     
 def p_analisis_id(p):
     """analisis_id : MEAN
@@ -506,6 +506,7 @@ def p_analisis_id(p):
                    | MIN
                    | MAX
                    | MEDIAN
+                   | SIZE
     
     """
     p[0] = p[1]
@@ -697,9 +698,25 @@ def p_constant_s(p):
     ic_generator.stackTypes.append("string")
 
 
+def p_llamada_type(p):
+    """llamada_type : TYPE '(' ID ')'
+    """
+    variable = vars_table.current_scope["vars"][p[3]]
+
+    if variable:
+        if not variable["is_array"]:
+            ic_generator.stackOperators.append(p[1])
+            ic_generator.stackOperands.append(variable["address"])
+            ic_generator.stackTypes.append(variable["type"])
+            ic_generator.generate_analysis_quadruple()
+        else:
+            raise TypeError(f"Type function cannot be passed arrays")
+
+
 def p_valor(p):
     """valor : llamada
              | llamada_analisis
+             | llamada_type
              | id
              | arreglo
              | in
@@ -738,6 +755,8 @@ def p_id(p):
                 j = 1
                 address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
             else:
+                if len(ic_generator.stackOperands) == 0:
+                    raise TypeError(f"Missing one dimension from array call at '{p[1]}'")
                 j = ic_generator.stackOperands.pop()
                 ic_generator.stackTypes.pop()
                 address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])

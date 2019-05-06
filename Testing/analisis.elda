@@ -8,11 +8,13 @@ void standard_deviation(){
 void main() {
     int[5] x = [1, 1, 1, 1, 1];
     float c = mean(x);
+    string d = "Hello";
     out("King of the North");
     out(c, "MEAN");
     out(max(x), "MAX");
     out(median(x), "MEDIAN");
     out(std(x), "STD");
     standard_deviation();
-    out(mean(x), "MEAN");
+    out(size(a), "SIZE");
+    out(type(c));
 }
