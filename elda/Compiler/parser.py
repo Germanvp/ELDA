@@ -61,6 +61,7 @@ def p_main_id(p):
     ic_generator.reset_bases()
     # vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
     if vars_table.current_scope is not vars_table.table["global"]:
+        ic_generator.create_array_size(vars_table.current_scope)
         del vars_table.current_scope["vars"]
 
     vars_table.create_table(p[2], p[1])
@@ -71,8 +72,15 @@ def p_main(p):
     """
     ic_generator.reset_bases()
     vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
+    
+    # Guardamos tamaños de arreglos para usarlos en VM.
+    ic_generator.create_array_size(vars_table.current_scope)
     del vars_table.current_scope["vars"]
+    
+    # Guardamos tamaños de arreglos para usarlos en VM.
+    ic_generator.create_array_size(vars_table.table["global"])
     del vars_table.table["global"]["vars"]
+
 
 
 def p_r_main_par(p):
@@ -472,7 +480,38 @@ def p_llamadaD(p):
                 | empty
     """
 
-
+# Para funciones como mean, std, var etc..
+def p_llamada_analisis(p):
+    """llamada_analisis : analisis_id '(' ID ')'
+    
+    """
+    variable = vars_table.search(p[3])
+    
+    ## Checamos si la variable existe y si es un arreglo.
+    if variable:
+        if variable["is_array"]:
+            address = variable["address"]
+            ic_generator.stackOperands.append(address)
+            ic_generator.stackTypes.append(variable["type"])
+            
+            ic_generator.generate_analysis_quadruple()
+        else:
+            raise TypeError(f"Parameter for function '{p[1]}' must be an array")
+        
+    
+def p_analisis_id(p):
+    """analisis_id : MEAN
+                   | STD
+                   | VAR
+                   | MIN
+                   | MAX
+                   | MEDIAN
+    
+    """
+    p[0] = p[1]
+    ic_generator.stackOperators.append(p[1])
+    
+    
 def p_expresion(p):
     """expresion : not expr
                  | not expr and expresion
@@ -660,6 +699,7 @@ def p_constant_s(p):
 
 def p_valor(p):
     """valor : llamada
+             | llamada_analisis
              | id
              | arreglo
              | in
@@ -781,6 +821,7 @@ def p_funcion_type_id(p):
 
     ic_generator.reset_bases()
     if vars_table.current_scope is not vars_table.table["global"]:
+        ic_generator.create_array_size(vars_table.current_scope)
         del vars_table.current_scope["vars"]
     else:
         ic_generator.generate_main_goto()
@@ -795,6 +836,7 @@ def p_funcion_void_id(p):
 
     ic_generator.reset_bases()
     if vars_table.current_scope is not vars_table.table["global"]:
+        ic_generator.create_array_size(vars_table.current_scope)
         del vars_table.current_scope["vars"]
     else:
         ic_generator.generate_main_goto()

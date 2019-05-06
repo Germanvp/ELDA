@@ -33,7 +33,13 @@ reserved = {
             'float': 'TYPE_FLOAT',
             'string': 'TYPE_STRING',
             'void': 'VOID',
-            'main': 'MAIN'
+            'main': 'MAIN',
+            'mean': 'MEAN',
+            'std': 'STD',
+            'var': 'VAR',
+            'min': 'MIN',
+            'max': 'MAX',
+            'median': 'MEDIAN',
         }
 
 tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'COMPOPER', 'RELOP', 'SUM', 'MINUS'

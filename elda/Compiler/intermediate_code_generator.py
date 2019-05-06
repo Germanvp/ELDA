@@ -309,6 +309,25 @@ class ICG:
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
 
+    def generate_analysis_quadruple(self):
+
+        array_pointer = self.stackOperands.pop()
+        function = self.stackOperators.pop().upper()
+
+        if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN']:
+            # El tipo del arreglo que usaremos para calcular.
+            array_type = self.stackTypes.pop()
+
+            if (array_type == "string"):
+                raise TypeError(f"cannot perform reduce with flexible type")
+
+            result = self.get_memory_address("local", "float")
+            self.stackOperands.append(result)
+            self.stackTypes.append("float")
+
+            quadruple = Quadruple(array_pointer, None, function, result)
+            self.quadrupleList.append(quadruple)
+
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
         columns = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
         rows = self.get_memory_address("constants", "int", value=str(dope_vector[0]))
@@ -347,8 +366,16 @@ class ICG:
 
         return result_address
 
-    def generate_obj_file(self, name, dir_func):
+    def create_array_size(self, table):
+        table["array_sizes"] = {}
+        for variable in table["vars"]:
+            data = table["vars"][variable]
+            if data['is_array']:
+                address = data["address"]
+                size = data['dope_vector']
+                table["array_sizes"][address] = size
 
+    def generate_obj_file(self, name, dir_func):
         file = {
             "Quadruples": [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList],
             "Dir Func": dir_func,
