@@ -496,8 +496,7 @@ def p_llamada_analisis(p):
             
             ic_generator.generate_analysis_quadruple()
         else:
-            ## No es arreglo m8.
-            print("A")
+            raise TypeError(f"Parameter for function '{p[1]}' must be an array")
         
     
 def p_analisis_id(p):
@@ -509,6 +508,7 @@ def p_analisis_id(p):
                    | MEDIAN
     
     """
+    p[0] = p[1]
     ic_generator.stackOperators.append(p[1])
     
     

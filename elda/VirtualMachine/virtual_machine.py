@@ -27,18 +27,21 @@ class VirtualMachine:
         """
         file = open(file_name, "r")
         data = json.load(file)
-        
+
         for const_item in data["Const Table"]:
             address = const_item[0]
             value = const_item[1]
             self.main_memory.memory_constants[address] = self.convert_to_type(value)
-            
-            
+
         dir_func = ast.literal_eval(data["Dir Func"])
-            
-        self.procedure_stack.append("global")
-        self.array_sizes = dir_func["global"]["array_sizes"]
-        
+
+        initial_array_sizes = {}
+        initial_array_sizes.update(dir_func["global"]["array_sizes"])
+        initial_array_sizes.update(dir_func["main"]["array_sizes"])
+
+        self.procedure_stack.append("main")
+        self.array_sizes = initial_array_sizes
+
         self.process_quadruples(data["Quadruples"], dir_func)
 
     @staticmethod
@@ -64,8 +67,8 @@ class VirtualMachine:
     def process_quadruples(self, quadruple_list, dir_func, ip=0):
         params = []
         return_value = None
-        #Para que sepamos de que tamaño son los arreglos.
-        
+        # Para que sepamos de que tamaño son los arreglos.
+
         while True:
             operator = quadruple_list[ip][0]
             op1 = quadruple_list[ip][1]
@@ -74,7 +77,8 @@ class VirtualMachine:
             op1, op2, result = self.process_addresses(op1, op2, result)
             if operator == "+":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
-                if (isinstance(memory1[op1], str) and not isinstance(memory2[op2], str)) or (isinstance(memory2[op2], str) and not isinstance(memory1[op1], str)):
+                if (isinstance(memory1[op1], str) and not isinstance(memory2[op2], str)) or (
+                        isinstance(memory2[op2], str) and not isinstance(memory1[op1], str)):
                     memory_result[result] = str(memory1[op1]) + str(memory2[op2])
                 else:
                     memory_result[result] = memory1[op1] + memory2[op2]
@@ -163,22 +167,21 @@ class VirtualMachine:
             elif operator == "GOSUB":
                 self.main_memory.active_record = self.main_memory.memory_execution[
                     list(self.main_memory.memory_execution.keys())[-1]]
-                
+
                 ## Lo ponemos en el stack de funciones
                 ## sacamos los tamaños de sus arreglos si es que tiene.
                 # Los tamaños tiene que ser los del global + los de la func.
                 self.procedure_stack.append(op1)
-                
+
                 new_array_sizes = {}
                 new_array_sizes.update(self.array_sizes)
                 new_array_sizes.update(dir_func[op1]["array_sizes"])
-                
-                self.array_sizes = new_array_sizes
-                
-#                # Por si queremos checar 
-#                print(self.procedure_stack, self.array_sizes)
 
-                
+                self.array_sizes = new_array_sizes
+
+                #                # Por si queremos checar
+                # print(self.procedure_stack, self.array_sizes)
+
                 if int(op2) == dir_func[op1]["params_count"]:
                     if self.main_memory.active_record.check_params(dir_func[op1]["params_type"], params):
                         self.main_memory.active_record.assign_params(params)
@@ -202,19 +205,28 @@ class VirtualMachine:
                 ip += 1
             elif operator == "ENDPROC":
                 self.main_memory.remove_scope()
-                
+
                 # Quitamos esa funcion del procedure_stack
                 # Regresamos a tener los tamaños de los arreglos que teniamos.                
                 self.procedure_stack.pop()
-                self.array_sizes = dir_func[self.procedure_stack[-1]]["array_sizes"] if len(self.procedure_stack) > 0 else {}
-#                # Por si queremos checar 
-#                print(self.procedure_stack, self.array_sizes)
-                
+
+                if len(self.procedure_stack) > 0:
+                    new_array_sizes = {}
+                    new_array_sizes.update(dir_func["global"]["array_sizes"])
+                    new_array_sizes.update(dir_func[self.procedure_stack[-1]]["array_sizes"])
+
+                    self.array_sizes = new_array_sizes
+
+                else:
+                    self.array_sizes = {}
+                #                # Por si queremos checar
+                # print(self.procedure_stack, self.array_sizes)
+
                 if return_value is not None:
                     return return_value
                 else:
                     break
-                
+
             elif operator == "VER":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
                 # Checamos si el numero esta entre el rango de esa dimension.
@@ -226,70 +238,70 @@ class VirtualMachine:
             elif operator == "MEAN":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.mean(variable)
                 ip += 1
             elif operator == "STD":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.std(variable)
                 ip += 1
             elif operator == "VAR":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.var(variable)
                 ip += 1
             elif operator == "MAX":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.max(variable)
                 ip += 1
             elif operator == "MIN":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.min(variable)
                 ip += 1
             elif operator == "MEDIAN":
                 memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
-                
+
                 # Sacamos la forma que debe tener el arreglo.
                 # Y el arreglo verdad...
                 array_shape = self.array_sizes[op1]
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
-                
+
                 memory_result[result] = np.median(variable)
                 ip += 1
-            
+
     def construct_dimensional_variable(self, memory, start, shape):
         """
             Funcion que construye y regresa los vectores y matrices. 
@@ -298,19 +310,16 @@ class VirtualMachine:
         # en donde el tamaño es la multiplicacion de rows x columns
         variable = []
         size = shape[0] * shape[1]
-        
+
         # Sacamos y ponemos valores en vector/matriz
         for i in range(0, size):
             variable.append(memory[start + i])
-        
+
         # Para que sea de la forma que queremos.
         variable = np.reshape(np.array(variable), shape)
-        
+
         return variable
-        
-        
-        
-        
+
     def get_memory(self, address):
         """
         Retrieves the correct memory based on the given address

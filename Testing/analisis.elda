@@ -6,11 +6,13 @@ void standard_deviation(){
     out(std(a), "STD");
 }
 void main() {
-    float c = mean(a);
-    out("King of the Nortttfh");
+    int[5] x = [1, 1, 1, 1, 1];
+    float c = mean(x);
+    out("King of the North");
     out(c, "MEAN");
-    out(min(a), "MIN");
-    out(max(a), "MAX");
-    out(median(a), "MEDIAN");
+    out(max(x), "MAX");
+    out(median(x), "MEDIAN");
+    out(std(x), "STD");
     standard_deviation();
+    out(mean(x), "MEAN");
 }
