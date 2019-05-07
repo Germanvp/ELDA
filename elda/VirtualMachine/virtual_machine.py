@@ -7,6 +7,7 @@ Created on Thu Apr 25 16:45:52 2019
 """
 import sklearn
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.cluster import KMeans
 from .main_memory import MainMemory
 import numpy as np
 import matplotlib.pyplot as plt
@@ -351,46 +352,66 @@ class VirtualMachine:
 
                 ip += 1
             elif operator == "LINEAR_REGRESSION":
-                #Sacamos X e Y.
-                X_memory = self.get_memory(op1)
-                Y_memory = self.get_memory(op2)
-                
-                X_shape = self.array_sizes[op1]
-                Y_shape = self.array_sizes[op2]
-                
+                # Sacamos X e Y.
+                x_memory = self.get_memory(op1)
+                y_memory = self.get_memory(op2)
+
+                x_shape = self.array_sizes[op1]
+                y_shape = self.array_sizes[op2]
+
                 # Los arreglos, para Y necesitamos transpuesta
-                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
-                Y = (self.construct_dimensional_variable(Y_memory, op2, Y_shape)).T
-                
-                #Memoria en donde se agregaran los parametros.
+                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
+                y = (self.construct_dimensional_variable(y_memory, op2, y_shape)).T
+
+                # Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
-                
-                clf = LinearRegression().fit(X, Y)
-                
+
+                clf = LinearRegression().fit(x, y)
+
                 params_memory[result] = clf.coef_[0][0]
                 params_memory[result + 1] = clf.coef_[0][1]
-                
+
                 ip += 1
             elif operator == "LOGISTIC_REGRESSION":
-                #Sacamos X e Y.
-                X_memory = self.get_memory(op1)
-                Y_memory = self.get_memory(op2)
-                
-                X_shape = self.array_sizes[op1]
-                Y_shape = self.array_sizes[op2]
-                
+                # Sacamos X e Y.
+                x_memory = self.get_memory(op1)
+                y_memory = self.get_memory(op2)
+
+                x_shape = self.array_sizes[op1]
+                y_shape = self.array_sizes[op2]
+
                 # Los arreglos, para Y necesitamos transpuesta
-                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
-                Y = (self.construct_dimensional_variable(Y_memory, op2, Y_shape)).T
-                
-                #Memoria en donde se agregaran los parametros.
+                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
+                y = (self.construct_dimensional_variable(y_memory, op2, y_shape)).T
+
+                # Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
-                
-                clf = LogisticRegression().fit(X, Y)
-                
+
+                clf = LogisticRegression().fit(x, y)
+
                 params_memory[result] = clf.coef_[0][0]
                 params_memory[result + 1] = clf.coef_[0][1]
-                
+
+                ip += 1
+            elif operator == "K_MEANS":
+                x_memory = self.get_memory(op1)
+                k_memory = self.get_memory(op2)
+
+                x_shape = self.array_sizes[op1]
+
+                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
+
+                params_memory = self.get_memory(result)
+
+                kmeans = KMeans(k_memory[op2]).fit(x)
+
+                i = 0
+                while i < k_memory[op2]:
+                    params_memory[result] = kmeans.cluster_centers_[i][0]
+                    result += 1
+                    params_memory[result] = kmeans.cluster_centers_[i][1]
+                    result += 1
+                    i += 1
                 ip += 1
 
     def construct_dimensional_variable(self, memory, start, shape):

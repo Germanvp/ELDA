@@ -547,41 +547,71 @@ def p_analisis_id(p):
 def p_llamada_clasificador(p):
     """llamada_clasificador : clasificador_id '(' ID ',' ID ')'
     """
-    X = vars_table.search(p[3])
-    Y = vars_table.search(p[5])
+    x = vars_table.search(p[3])
+    y = vars_table.search(p[5])
     
-    if X and Y:
-        if X["is_array"] and Y["is_array"]:
-            ### Sacamos direccion de vectores/matrices y sus formas.
-            X_address = X["address"]
-            Y_address = Y["address"]
+    if x and y:
+        if x["is_array"] and y["is_array"]:
+            # Sacamos direccion de vectores/matrices y sus formas.
+            x_address = x["address"]
+            y_address = y["address"]
             
-            X_shape = X["dope_vector"]
-            Y_shape = Y["dope_vector"]
+            x_shape = x["dope_vector"]
+            y_shape = y["dope_vector"]
             
-            ### Si no coinciden pues cuello.
-            if X_shape[0] != Y_shape[1] or Y_shape[0] != 1:
-                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier o una jalada asi.")
+            # Si no coinciden pues cuello.
+            if x_shape[0] != y_shape[1] or y_shape[0] != 1:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier.")
                 
-            ### Por si las necesitamos en un futuro. Osea mañana por que ya no hay tiempo :(
-            ic_generator.stackOperands.append(X_address)
-            ic_generator.stackOperands.append(Y_address)
+            # Por si las necesitamos en un futuro.
+            ic_generator.stackOperands.append(x_address)
+            ic_generator.stackOperands.append(y_address)
             
-            ic_generator.stackTypes.append(X["type"])
-            ic_generator.stackTypes.append(Y["type"])
+            ic_generator.stackTypes.append(x["type"])
+            ic_generator.stackTypes.append(y["type"])
             
             ic_generator.generate_analysis_quadruple()
             
             # Regresa el tamaño para que se verifique en la asignacion.
-            p[0] = (1,2)
+            p[0] = (1, 2)
         else:
-            raise TypeError("Ahorita lo cambio Juanma, no llores :(")
+            raise TypeError("Regression call parameters must be arrays")
+
+
+def p_llamada_kmeans(p):
+    """llamada_kmeans : K_MEANS '(' constant_i ',' ID ')'
+    """
+    x = vars_table.search(p[5])
+
+    if x:
+        if x["is_array"]:
+            # Sacamos direccion de vectores/matrices y sus formas.
+            x_address = x["address"]
+
+            x_shape = x["dope_vector"]
+
+            # Si no coinciden pues cuello.
+            if x_shape[1] != 2:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier.")
+
+            ic_generator.stackOperators.append(p[1])
+
+            # Por si las necesitamos en un futuro.
+            ic_generator.stackOperands.append(x_address)
+
+            ic_generator.stackTypes.append(x["type"])
+
+            ic_generator.generate_analysis_quadruple(p[3])
+
+            # Regresa el tamaño para que se verifique en la asignacion.
+            p[0] = (int(p[3]), 2)
+        else:
+            raise TypeError("Regression call parameters must be arrays")
+
 
 def p_clasificador_id(p):
     """clasificador_id  : LOGISTIC_REGRESSION
                         | LINEAR_REGRESSION
-                        | K_MEANS
-    
     """
     p[0] = p[1]
     
@@ -792,6 +822,7 @@ def p_valor(p):
     """valor : llamada
              | llamada_analisis
              | llamada_clasificador
+             | llamada_kmeans
              | llamada_type
              | id
              | arreglo

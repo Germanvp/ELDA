@@ -115,7 +115,6 @@ class ICG:
             self.global_counters[counter] += size
         elif memory_type == "local":
             address = self.base_local + type_start + self.local_counters[counter]
-
             if address + size > self.base_local + type_end:
                 raise TypeError(f"Stack Overflow: Can't fit '{var_type}' into '{memory_type}'")
             self.local_counters[counter] += size
@@ -309,7 +308,7 @@ class ICG:
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
 
-    def generate_analysis_quadruple(self):
+    def generate_analysis_quadruple(self, k_clusters=None):
         function = self.stackOperators.pop().upper()
         if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN', 'SIZE']:
             array_pointer = self.stackOperands.pop()
@@ -375,6 +374,47 @@ class ICG:
 
             quadruple = Quadruple(x, y, function, result1)
             self.quadrupleList.append(quadruple)
+        elif function in ['K_MEANS']:
+            x = self.stackOperands.pop()
+            k = self.stackOperands.pop()
+
+            # Sacamos los tipos de los arreglos.
+            x_type = self.stackTypes.pop()
+            k_type = self.stackTypes.pop()
+
+            if x_type in ['string', 'bool']:
+                raise TypeError(f"Cannot perform kmeans with flexible type")
+
+            if k_type != 'int':
+                raise TypeError("K parameter of kmeans must be int")
+
+            if int(k_clusters) <= 0:
+                raise TypeError("K value of kmeans must be positive and greater than 0")
+
+            # Las dir de los dos pedazos del arreglo.
+            result1 = self.get_memory_address("local", "float")
+            result2 = self.get_memory_address("local", "float")
+
+            # Para que se pongan en donde se quieren asignar.
+            self.stackOperands.append(result1)
+            self.stackOperands.append(result2)
+
+            self.stackTypes.append("float")
+            self.stackTypes.append("float")
+
+            quadruple = Quadruple(x, k, function, result1)
+            self.quadrupleList.append(quadruple)
+            for i in range(0, int(k_clusters)-1):
+                # Las dir de los dos pedazos del arreglo.
+                result1 = self.get_memory_address("local", "float")
+                result2 = self.get_memory_address("local", "float")
+
+                # Para que se pongan en donde se quieren asignar.
+                self.stackOperands.append(result1)
+                self.stackOperands.append(result2)
+
+                self.stackTypes.append("float")
+                self.stackTypes.append("float")
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
         columns = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
