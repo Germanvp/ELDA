@@ -155,6 +155,10 @@ def p_declaracion(p):
     if dope_vector:
         # Checamos si ya existe una asignacion para el vector/matriz.
         if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
+            
+            if dope_vector != p[4]:
+                raise TypeError(f"Dimensional variable {p[2]} must be of size {dope_vector} not {p[4]}")
+                
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
@@ -509,7 +513,51 @@ def p_analisis_id(p):
                    | SIZE
     
     """
+    
     p[0] = p[1]
+    ic_generator.stackOperators.append(p[1])
+    
+def p_llamada_clasificador(p):
+    """llamada_clasificador : clasificador_id '(' ID ',' ID ')'
+    """
+    X = vars_table.search(p[3])
+    Y = vars_table.search(p[5])
+    
+    if X and Y:
+        if X["is_array"] and Y["is_array"]:
+            ### Sacamos direccion de vectores/matrices y sus formas.
+            X_address = X["address"]
+            Y_address = Y["address"]
+            
+            X_shape = X["dope_vector"]
+            Y_shape = Y["dope_vector"]
+            
+            ### Si no coinciden pues cuello.
+            if X_shape[0] != Y_shape[1] or Y_shape[0] != 1:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier o una jalada asi.")
+                
+            ### Por si las necesitamos en un futuro. Osea mañana por que ya no hay tiempo :(
+            ic_generator.stackOperands.append(X_address)
+            ic_generator.stackOperands.append(Y_address)
+            
+            ic_generator.stackTypes.append(X["type"])
+            ic_generator.stackTypes.append(Y["type"])
+            
+            ic_generator.generate_analysis_quadruple()
+            
+            # Regresa el tamaño para que se verifique en la asignacion.
+            p[0] = (1,2)
+        else:
+            raise TypeError("Ahorita lo cambio Juanma, no llores :(")
+
+def p_clasificador_id(p):
+    """clasificador_id  : LOGISTIC_REGRESSION
+                        | LINEAR_REGRESSION
+                        | K_MEANS
+    
+    """
+    p[0] = p[1]
+    
     ic_generator.stackOperators.append(p[1])
     
     
@@ -716,6 +764,7 @@ def p_llamada_type(p):
 def p_valor(p):
     """valor : llamada
              | llamada_analisis
+             | llamada_clasificador
              | llamada_type
              | id
              | arreglo
@@ -739,6 +788,7 @@ def p_id(p):
 
     if variable:
         if variable["is_array"]:
+            
             if p[2] is None:
                 raise TypeError(f"Array values must be followed by an index, at array call for '{p[1]}'")
             # Aqui sacamos las filas y las columas del dope vector

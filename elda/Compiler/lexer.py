@@ -42,6 +42,9 @@ reserved = {
             'size': 'SIZE',
             'type': 'TYPE',
             'median': 'MEDIAN',
+            'linear_regression': 'LINEAR_REGRESSION',
+            'logistic_regression': 'LOGISTIC_REGRESSION',
+            'k_means': 'K_MEANS'
         }
 
 tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'COMPOPER', 'RELOP', 'SUM', 'MINUS'

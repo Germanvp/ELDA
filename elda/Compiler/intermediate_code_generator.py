@@ -311,7 +311,6 @@ class ICG:
 
     def generate_analysis_quadruple(self):
         function = self.stackOperators.pop().upper()
-
         if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN', 'SIZE']:
             array_pointer = self.stackOperands.pop()
             # El tipo del arreglo que usaremos para calcular.
@@ -334,6 +333,31 @@ class ICG:
 
             quadruple = Quadruple(var, None, function, result)
             self.quadrupleList.append(quadruple)
+        elif function in ['LINEAR_REGRESSION', 'LOGISTIC_REGRESSION']:
+            ### Sacamos x e y. Asi literalmente como dice el codigo pero para que
+            ### Juanma pueda entender.
+            Y = self.stackOperands.pop()
+            X = self.stackOperands.pop()
+            
+            ## Sacamos los tipos de los arreglos.
+            ### TODO: Verificaciones.
+            Y_type = self.stackTypes.pop()
+            X_type = self.stackTypes.pop()
+            
+            # Las dir de los dos pedazos del arreglo.
+            result1 = self.get_memory_address("local", "float")
+            result2 = self.get_memory_address("local", "float")
+            
+            # Para que se pongan en donde se quieren asignar.
+            self.stackOperands.append(result1)
+            self.stackOperands.append(result2)
+            
+            self.stackTypes.append("float")
+            self.stackTypes.append("float")
+
+            quadruple = Quadruple(X, Y, function, result1)
+            self.quadrupleList.append(quadruple)
+            
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
         columns = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
