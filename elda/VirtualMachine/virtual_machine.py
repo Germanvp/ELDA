@@ -367,11 +367,15 @@ class VirtualMachine:
                 X = (np.array(X)).T
                 Y = (np.array(Y)).T
                 
+                print(X)
+                print(Y)
+                
                 #Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
                 
                 clf = LinearRegression().fit(X, Y)
                                 
+                print(clf.coef_, clf.intercept_)
                 params_memory[result] = clf.coef_[0][0]
                 params_memory[result + 1] = clf.intercept_[0]
                 
