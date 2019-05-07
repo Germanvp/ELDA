@@ -560,7 +560,7 @@ def p_llamada_clasificador(p):
             y_shape = y["dope_vector"]
 
             ### Si no coinciden pues cuello.
-            if X_shape[1] != Y_shape[1] or Y_shape[0] != 1 or X_shape[0] != 1:
+            if x_shape[1] != y_shape[1] or y_shape[0] != 1 or x_shape[0] != 1:
                 raise TypeError(f"Shapes for {p[3]} and {p[5]} do not match for {p[1]}().")
                 
             # Por si las necesitamos en un futuro.
