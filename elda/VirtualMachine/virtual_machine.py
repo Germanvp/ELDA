@@ -10,6 +10,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.cluster import KMeans
 from .main_memory import MainMemory
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from pylab import *
 import json
@@ -418,6 +419,48 @@ class VirtualMachine:
                     result += 1
                     i += 1
                 ip += 1
+            elif operator == "OPEN_FILE":
+                # Sacamos la memoria del archivo y del vector/matriz al que se
+                # lo queremos asignar.
+                
+                file_name_memory = self.get_memory(op1)
+                var_memory = self.get_memory(result)
+                
+                # Sacamos el string con el nombre del archivo.
+                file_name = file_name_memory[op1]
+                
+                variable_shape = self.array_sizes[result]
+                variable_address = result
+                                
+                # Leemos el archivo y sacamos su matriz correspondiente.
+                file_data = (pd.read_csv(file_name)).values
+                
+                if file_data.shape[1] == 1:
+                    file_data = file_data.T
+                    
+                # Si las shape del archivo y de la matriz/vector que queremos no son iguales
+                # cuello.
+                if variable_shape != file_data.shape:
+                    raise TypeError(f"File data is of size {file_data.shape} not {variable_shape}")
+                    
+                # Asignamos cada valor uno por uno.
+                
+                for i in range(0, file_data.shape[0]):
+                    for j in range(0, file_data.shape[1]):
+                        
+                        offset = i * file_data.shape[1] + j
+                        temp_address = variable_address + offset
+                        
+                        var_memory[temp_address] = file_data[i, j]
+#                ## TEST
+#                x = self.construct_dimensional_variable(var_memory, result, variable_shape)
+#                print(x == file_data)
+                
+                ip += 1
+                
+                
+                
+                
 
     def construct_dimensional_variable(self, memory, start, shape):
         """

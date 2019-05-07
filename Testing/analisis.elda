@@ -1,22 +1,28 @@
 int[2][5] a = [[1,2,3,4,5], [6,7,8,9,10]];
 int b = 5 + 0 + 10;
 int[10][2] k = [[5,3],[10,15],[15,12],[24,10],[30,45],[85,70],[71,80],[60,78],[55,52],[80,91]];
-
+float [29] basicX;
+float [29] basicY;
+    
 void standard_deviation(){
     string w = "Winter is Here";
     out(std(a), "STD");
 }
+
 void main() {
     int[5] x = [1, 2, 3, 4, 5];
     int[5] y = [1, 2, 3, 4, 5];
+    
     float c = mean(x);
     string d = "Hello";
+    
     float[3][2] params = k_means(3, k);
     for i with range(0, 3) {
         for j with range(0, 2) {
             out(params[i][j]);
         }
     }
+    
     out("King of the North");
     out(c, "MEAN");
     out(max(x), "MAX");
@@ -26,4 +32,9 @@ void main() {
     out(size(a), "SIZE");
     out(type(c));
     graph(x, y, "plot");
+    out("Regresion con data de files");
+    open_file("Testing/basicX.csv", basicX);
+    open_file("Testing/basicY.csv", basicY);
+
+
 }
