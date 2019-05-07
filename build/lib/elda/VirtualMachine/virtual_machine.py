@@ -5,8 +5,13 @@ Created on Thu Apr 25 16:45:52 2019
 
 @author: German
 """
-
+import sklearn
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.cluster import KMeans
 from .main_memory import MainMemory
+import numpy as np
+import matplotlib.pyplot as plt
+from pylab import *
 import json
 import ast
 
@@ -15,6 +20,8 @@ class VirtualMachine:
 
     def __init__(self):
         self.main_memory = MainMemory()
+        self.array_sizes = {}
+        self.procedure_stack = []
 
     def load_obj_file(self, file_name):
         """
@@ -30,7 +37,16 @@ class VirtualMachine:
             value = const_item[1]
             self.main_memory.memory_constants[address] = self.convert_to_type(value)
 
-        self.process_quadruples(data["Quadruples"], ast.literal_eval(data["Dir Func"]))
+        dir_func = ast.literal_eval(data["Dir Func"])
+
+        initial_array_sizes = {}
+        initial_array_sizes.update(dir_func["global"]["array_sizes"])
+        initial_array_sizes.update(dir_func["main"]["array_sizes"])
+
+        self.procedure_stack.append("main")
+        self.array_sizes = initial_array_sizes
+
+        self.process_quadruples(data["Quadruples"], dir_func)
 
     @staticmethod
     def convert_to_type(value):
@@ -55,6 +71,8 @@ class VirtualMachine:
     def process_quadruples(self, quadruple_list, dir_func, ip=0):
         params = []
         return_value = None
+        # Para que sepamos de que tamaño son los arreglos.
+
         while True:
             operator = quadruple_list[ip][0]
             op1 = quadruple_list[ip][1]
@@ -63,7 +81,8 @@ class VirtualMachine:
             op1, op2, result = self.process_addresses(op1, op2, result)
             if operator == "+":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
-                if (isinstance(memory1[op1], str) and not isinstance(memory2[op2], str)) or (isinstance(memory2[op2], str) and not isinstance(memory1[op1], str)):
+                if (isinstance(memory1[op1], str) and not isinstance(memory2[op2], str)) or (
+                        isinstance(memory2[op2], str) and not isinstance(memory1[op1], str)):
                     memory_result[result] = str(memory1[op1]) + str(memory2[op2])
                 else:
                     memory_result[result] = memory1[op1] + memory2[op2]
@@ -153,6 +172,20 @@ class VirtualMachine:
                 self.main_memory.active_record = self.main_memory.memory_execution[
                     list(self.main_memory.memory_execution.keys())[-1]]
 
+                ## Lo ponemos en el stack de funciones
+                ## sacamos los tamaños de sus arreglos si es que tiene.
+                # Los tamaños tiene que ser los del global + los de la func.
+                self.procedure_stack.append(op1)
+
+                new_array_sizes = {}
+                new_array_sizes.update(self.array_sizes)
+                new_array_sizes.update(dir_func[op1]["array_sizes"])
+
+                self.array_sizes = new_array_sizes
+
+                #                # Por si queremos checar
+                # print(self.procedure_stack, self.array_sizes)
+
                 if int(op2) == dir_func[op1]["params_count"]:
                     if self.main_memory.active_record.check_params(dir_func[op1]["params_type"], params):
                         self.main_memory.active_record.assign_params(params)
@@ -176,10 +209,28 @@ class VirtualMachine:
                 ip += 1
             elif operator == "ENDPROC":
                 self.main_memory.remove_scope()
+
+                # Quitamos esa funcion del procedure_stack
+                # Regresamos a tener los tamaños de los arreglos que teniamos.                
+                self.procedure_stack.pop()
+
+                if len(self.procedure_stack) > 0:
+                    new_array_sizes = {}
+                    new_array_sizes.update(dir_func["global"]["array_sizes"])
+                    new_array_sizes.update(dir_func[self.procedure_stack[-1]]["array_sizes"])
+
+                    self.array_sizes = new_array_sizes
+
+                else:
+                    self.array_sizes = {}
+                #                # Por si queremos checar
+                # print(self.procedure_stack, self.array_sizes)
+
                 if return_value is not None:
                     return return_value
                 else:
                     break
+
             elif operator == "VER":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
                 # Checamos si el numero esta entre el rango de esa dimension.
@@ -188,6 +239,203 @@ class VirtualMachine:
                         f"Index {int(memory1[op1])} not in range {int(memory2[op2])}-{int(memory_result[result])}")
 
                 ip += 1
+            elif operator == "MEAN":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.mean(variable)
+                ip += 1
+            elif operator == "SIZE":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+
+                memory_result[result] = array_shape[0] * array_shape[1]
+                ip += 1
+            elif operator == "TYPE":
+                memory_result = self.get_memory(result)
+
+                result_value = self.get_type(op1)
+                if result_value is int:
+                    result_value = "int"
+                elif result_value is float:
+                    result_value = "float"
+                elif result_value is str:
+                    result_value = "string"
+                else:
+                    result_value = "bool"
+
+                memory_result[result] = result_value
+                ip += 1
+            elif operator == "STD":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.std(variable)
+                ip += 1
+            elif operator == "VAR":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.var(variable)
+                ip += 1
+            elif operator == "MAX":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.max(variable)
+                ip += 1
+            elif operator == "MIN":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.min(variable)
+                ip += 1
+            elif operator == "MEDIAN":
+                memory = self.get_memory(op1)
+                memory_result = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+
+                memory_result[result] = np.median(variable)
+                ip += 1
+            elif operator == "GRAPH":
+                memory = self.get_memory(op1)
+                memory2 = self.get_memory(op2)
+                type_memory = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                array_shape2 = self.array_sizes[op2]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+                variable2 = self.construct_dimensional_variable(memory2, op2, array_shape2)
+
+                if type_memory[result] == 'plot':
+                    plot(variable[0], variable2[0])
+                    grid(True)
+                    show()
+                elif type_memory[result] == 'scatter':
+                    plt.scatter(variable, variable2)
+                    plt.show()
+
+                ip += 1
+            elif operator == "LINEAR_REGRESSION":
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, necesitamos transpuesta para sklearn
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = self.construct_dimensional_variable(Y_memory, op2, Y_shape)
+                                
+                X = (np.array(X)).T
+                Y = (np.array(Y)).T
+                
+                #Memoria en donde se agregaran los parametros.
+                params_memory = self.get_memory(result)
+                
+                clf = LinearRegression().fit(X, Y)
+                                
+                params_memory[result] = clf.coef_[0][0]
+                params_memory[result + 1] = clf.intercept_[0]
+                
+                ip += 1
+            elif operator == "LOGISTIC_REGRESSION":
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, necesitamos transpuesta para sklearn
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = self.construct_dimensional_variable(Y_memory, op2, Y_shape)
+                                
+                X = (np.array(X)).T
+                Y = (np.array(Y)).T
+                
+                #Memoria en donde se agregaran los parametros.
+                params_memory = self.get_memory(result)
+                
+                clf = LogisticRegression().fit(X, Y)
+                                
+                params_memory[result] = clf.coef_[0][0]
+                params_memory[result + 1] = clf.intercept_[0]
+                ip += 1
+            elif operator == "K_MEANS":
+                x_memory = self.get_memory(op1)
+                k_memory = self.get_memory(op2)
+
+                x_shape = self.array_sizes[op1]
+
+                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
+
+                params_memory = self.get_memory(result)
+
+                kmeans = KMeans(k_memory[op2]).fit(x)
+
+                i = 0
+                while i < k_memory[op2]:
+                    params_memory[result] = kmeans.cluster_centers_[i][0]
+                    result += 1
+                    params_memory[result] = kmeans.cluster_centers_[i][1]
+                    result += 1
+                    i += 1
+                ip += 1
+
+    def construct_dimensional_variable(self, memory, start, shape):
+        """
+            Funcion que construye y regresa los vectores y matrices. 
+        """
+        # Vamos poniendo todos los valores en un arreglo de 1D 
+        # en donde el tamaño es la multiplicacion de rows x columns
+        variable = []
+        size = shape[0] * shape[1]
+
+        # Sacamos y ponemos valores en vector/matriz
+        for i in range(0, size):
+            variable.append(memory[start + i])
+
+        # Para que sea de la forma que queremos.
+        variable = np.reshape(np.array(variable), shape)
+
+        return variable
 
     def get_memory(self, address):
         """

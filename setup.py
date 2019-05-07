@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="elda",
-    version="0.0.6",
+    version="0.0.8",
     author="Juan Manuel Perez & German Villacorta",
     author_email="juanmapf97@gmail.com",
     description="A data analysis focused language built with Python",
@@ -25,5 +25,8 @@ setuptools.setup(
             'elda = elda.main:elda',
         ],
     },
-    install_requires=['ply']
+    install_requires=['ply',
+                      'numpy',
+                      'matplotlib',
+                      'sklearn']
 )
