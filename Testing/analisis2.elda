@@ -1,0 +1,10 @@
+void main() {
+    int[4][2] x = [[1, 1], [1, 2], [2, 2], [2, 3]];
+    int[4] y = [ 6,  8,  9, 11];
+    
+    float[2] params = linear_regression(x, y);
+    float[2] params2 = logistic_regression(x, y);
+    
+    out(params[0], params[1]);
+    out(params2[0], params2[1]);
+}

@@ -311,7 +311,6 @@ class ICG:
 
     def generate_analysis_quadruple(self):
         function = self.stackOperators.pop().upper()
-
         if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN', 'SIZE']:
             array_pointer = self.stackOperands.pop()
             # El tipo del arreglo que usaremos para calcular.
@@ -351,6 +350,30 @@ class ICG:
                 raise TypeError(f"Cannot perform graph with flexible type")
 
             quadruple = Quadruple(x, y, function, plot_type_val)
+            self.quadrupleList.append(quadruple)
+        elif function in ['LINEAR_REGRESSION', 'LOGISTIC_REGRESSION']:
+            y = self.stackOperands.pop()
+            x = self.stackOperands.pop()
+            
+            # Sacamos los tipos de los arreglos.
+            y_type = self.stackTypes.pop()
+            x_type = self.stackTypes.pop()
+
+            if y_type in ['string', 'bool'] or x_type in ['string', 'bool']:
+                raise TypeError(f"Cannot perform regression with flexible type")
+            
+            # Las dir de los dos pedazos del arreglo.
+            result1 = self.get_memory_address("local", "float")
+            result2 = self.get_memory_address("local", "float")
+            
+            # Para que se pongan en donde se quieren asignar.
+            self.stackOperands.append(result1)
+            self.stackOperands.append(result2)
+            
+            self.stackTypes.append("float")
+            self.stackTypes.append("float")
+
+            quadruple = Quadruple(x, y, function, result1)
             self.quadrupleList.append(quadruple)
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):

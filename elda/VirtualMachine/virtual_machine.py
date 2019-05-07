@@ -5,7 +5,8 @@ Created on Thu Apr 25 16:45:52 2019
 
 @author: German
 """
-
+import sklearn
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from .main_memory import MainMemory
 import numpy as np
 import matplotlib.pyplot as plt
@@ -349,6 +350,48 @@ class VirtualMachine:
                     plt.show()
 
                 ip += 1
+            elif operator == "LINEAR_REGRESSION":
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, para Y necesitamos transpuesta
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = (self.construct_dimensional_variable(Y_memory, op2, Y_shape)).T
+                
+                #Memoria en donde se agregaran los parametros.
+                params_memory = self.get_memory(result)
+                
+                clf = LinearRegression().fit(X, Y)
+                
+                params_memory[result] = clf.coef_[0][0]
+                params_memory[result + 1] = clf.coef_[0][1]
+                
+                ip += 1
+            elif operator == "LOGISTIC_REGRESSION":
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, para Y necesitamos transpuesta
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = (self.construct_dimensional_variable(Y_memory, op2, Y_shape)).T
+                
+                #Memoria en donde se agregaran los parametros.
+                params_memory = self.get_memory(result)
+                
+                clf = LogisticRegression().fit(X, Y)
+                
+                params_memory[result] = clf.coef_[0][0]
+                params_memory[result + 1] = clf.coef_[0][1]
+                
+                ip += 1
 
     def construct_dimensional_variable(self, memory, start, shape):
         """
@@ -366,7 +409,7 @@ class VirtualMachine:
         # Para que sea de la forma que queremos.
         variable = np.reshape(np.array(variable), shape)
 
-        return variable
+        return np.array(variable)
 
     def get_memory(self, address):
         """
