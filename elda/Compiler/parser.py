@@ -533,8 +533,8 @@ def p_llamada_clasificador(p):
             Y_shape = Y["dope_vector"]
             
             ### Si no coinciden pues cuello.
-            if X_shape[0] != Y_shape[1] or Y_shape[0] != 1:
-                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier o una jalada asi.")
+            if X_shape[1] != Y_shape[1] or Y_shape[0] != 1 or X_shape[0] != 1:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} do not match for {p[1]}().")
                 
             ### Por si las necesitamos en un futuro. Osea mañana por que ya no hay tiempo :(
             ic_generator.stackOperands.append(X_address)
@@ -548,7 +548,7 @@ def p_llamada_clasificador(p):
             # Regresa el tamaño para que se verifique en la asignacion.
             p[0] = (1,2)
         else:
-            raise TypeError("Ahorita lo cambio Juanma, no llores :(")
+            raise TypeError(f"Parameters: {p[3]} and {p[5]} for {p[1]}() must be dimensional variables.")
 
 def p_clasificador_id(p):
     """clasificador_id  : LOGISTIC_REGRESSION
