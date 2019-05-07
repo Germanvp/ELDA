@@ -352,46 +352,51 @@ class VirtualMachine:
 
                 ip += 1
             elif operator == "LINEAR_REGRESSION":
-                # Sacamos X e Y.
-                x_memory = self.get_memory(op1)
-                y_memory = self.get_memory(op2)
-
-                x_shape = self.array_sizes[op1]
-                y_shape = self.array_sizes[op2]
-
-                # Los arreglos, para Y necesitamos transpuesta
-                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
-                y = (self.construct_dimensional_variable(y_memory, op2, y_shape)).T
-
-                # Memoria en donde se agregaran los parametros.
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, necesitamos transpuesta para sklearn
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = self.construct_dimensional_variable(Y_memory, op2, Y_shape)
+                                
+                X = (np.array(X)).T
+                Y = (np.array(Y)).T
+                
+                #Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
-
-                clf = LinearRegression().fit(x, y)
-
+                
+                clf = LinearRegression().fit(X, Y)
+                                
                 params_memory[result] = clf.coef_[0][0]
-                params_memory[result + 1] = clf.coef_[0][1]
-
+                params_memory[result + 1] = clf.intercept_[0]
+                
                 ip += 1
             elif operator == "LOGISTIC_REGRESSION":
-                # Sacamos X e Y.
-                x_memory = self.get_memory(op1)
-                y_memory = self.get_memory(op2)
-
-                x_shape = self.array_sizes[op1]
-                y_shape = self.array_sizes[op2]
-
-                # Los arreglos, para Y necesitamos transpuesta
-                x = self.construct_dimensional_variable(x_memory, op1, x_shape)
-                y = (self.construct_dimensional_variable(y_memory, op2, y_shape)).T
-
-                # Memoria en donde se agregaran los parametros.
+                #Sacamos X e Y.
+                X_memory = self.get_memory(op1)
+                Y_memory = self.get_memory(op2)
+                
+                X_shape = self.array_sizes[op1]
+                Y_shape = self.array_sizes[op2]
+                
+                # Los arreglos, necesitamos transpuesta para sklearn
+                X = self.construct_dimensional_variable(X_memory, op1, X_shape)
+                Y = self.construct_dimensional_variable(Y_memory, op2, Y_shape)
+                                
+                X = (np.array(X)).T
+                Y = (np.array(Y)).T
+                
+                #Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
-
-                clf = LogisticRegression().fit(x, y)
-
+                
+                clf = LogisticRegression().fit(X, Y)
+                                
                 params_memory[result] = clf.coef_[0][0]
-                params_memory[result + 1] = clf.coef_[0][1]
-
+                params_memory[result + 1] = clf.intercept_[0]
                 ip += 1
             elif operator == "K_MEANS":
                 x_memory = self.get_memory(op1)
@@ -430,7 +435,7 @@ class VirtualMachine:
         # Para que sea de la forma que queremos.
         variable = np.reshape(np.array(variable), shape)
 
-        return np.array(variable)
+        return variable
 
     def get_memory(self, address):
         """
