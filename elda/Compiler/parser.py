@@ -155,6 +155,10 @@ def p_declaracion(p):
     if dope_vector:
         # Checamos si ya existe una asignacion para el vector/matriz.
         if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
+            
+            if dope_vector != p[4]:
+                raise TypeError(f"Dimensional variable {p[2]} must be of size {dope_vector} not {p[4]}")
+                
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
@@ -203,6 +207,7 @@ def p_estatuto(p):
                 | ciclo_w
                 | ciclo_f
                 | llamada ';'
+                | llamada_graph ';'
     """
 
 
@@ -480,6 +485,33 @@ def p_llamadaD(p):
                 | empty
     """
 
+
+def p_llamada_graph(p):
+    """llamada_graph : GRAPH '(' ID ',' ID ',' constant_s ')'
+    """
+    variable_x = vars_table.search(p[3])
+    variable_y = vars_table.search(p[5])
+
+    if variable_x and variable_y:
+        if not (variable_x['is_array'] and variable_y['is_array']):
+            raise TypeError(f"Parameters for graph call must be arrays")
+        if not (variable_x['dope_vector'][0] == 1 and variable_y['dope_vector'][0] == 1):
+            raise TypeError(f"Parameters for graph call must be one dimensional arrays")
+        if not (p[7] in ['"plot"', '"scatter"']):
+            raise TypeError(f"Parameter for graph type must be either 'plot' or 'scatter', not '{p[7]}'")
+
+        ic_generator.stackOperators.append(p[1])
+
+        address_x = variable_x['address']
+        address_y = variable_y['address']
+        ic_generator.stackOperands.append(address_x)
+        ic_generator.stackTypes.append(variable_x["type"])
+        ic_generator.stackOperands.append(address_y)
+        ic_generator.stackTypes.append(variable_y["type"])
+
+        ic_generator.generate_analysis_quadruple()
+
+
 # Para funciones como mean, std, var etc..
 def p_llamada_analisis(p):
     """llamada_analisis : analisis_id '(' ID ')'
@@ -497,7 +529,7 @@ def p_llamada_analisis(p):
             ic_generator.generate_analysis_quadruple()
         else:
             raise TypeError(f"Parameter for function '{p[1]}' must be an array")
-        
+
     
 def p_analisis_id(p):
     """analisis_id : MEAN
@@ -506,9 +538,82 @@ def p_analisis_id(p):
                    | MIN
                    | MAX
                    | MEDIAN
+                   | SIZE
+    """
     
+    p[0] = p[1]
+    ic_generator.stackOperators.append(p[1])
+    
+def p_llamada_clasificador(p):
+    """llamada_clasificador : clasificador_id '(' ID ',' ID ')'
+    """
+    x = vars_table.search(p[3])
+    y = vars_table.search(p[5])
+    
+    if x and y:
+        if x["is_array"] and y["is_array"]:
+            # Sacamos direccion de vectores/matrices y sus formas.
+            x_address = x["address"]
+            y_address = y["address"]
+            
+            x_shape = x["dope_vector"]
+            y_shape = y["dope_vector"]
+
+            ### Si no coinciden pues cuello.
+            if x_shape[1] != y_shape[1] or y_shape[0] != 1 or x_shape[0] != 1:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} do not match for {p[1]}().")
+                
+            # Por si las necesitamos en un futuro.
+            ic_generator.stackOperands.append(x_address)
+            ic_generator.stackOperands.append(y_address)
+            
+            ic_generator.stackTypes.append(x["type"])
+            ic_generator.stackTypes.append(y["type"])
+            
+            ic_generator.generate_analysis_quadruple()
+            
+            # Regresa el tamaño para que se verifique en la asignacion.
+            p[0] = (1, 2)
+        else:
+            raise TypeError(f"Parameters: {p[3]} and {p[5]} for {p[1]}() must be dimensional variables.")
+
+
+def p_llamada_kmeans(p):
+    """llamada_kmeans : K_MEANS '(' constant_i ',' ID ')'
+    """
+    x = vars_table.search(p[5])
+
+    if x:
+        if x["is_array"]:
+            # Sacamos direccion de vectores/matrices y sus formas.
+            x_address = x["address"]
+
+            x_shape = x["dope_vector"]
+
+            # Si no coinciden pues cuello.
+            if x_shape[1] != 2:
+                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier.")
+
+            ic_generator.stackOperators.append(p[1])
+
+            # Por si las necesitamos en un futuro.
+            ic_generator.stackOperands.append(x_address)
+
+            ic_generator.stackTypes.append(x["type"])
+
+            ic_generator.generate_analysis_quadruple(p[3])
+
+            # Regresa el tamaño para que se verifique en la asignacion.
+            p[0] = (int(p[3]), 2)
+        else:
+            raise TypeError("Regression call parameters must be arrays")
+
+def p_clasificador_id(p):
+    """clasificador_id  : LOGISTIC_REGRESSION
+                        | LINEAR_REGRESSION
     """
     p[0] = p[1]
+    
     ic_generator.stackOperators.append(p[1])
     
     
@@ -697,9 +802,27 @@ def p_constant_s(p):
     ic_generator.stackTypes.append("string")
 
 
+def p_llamada_type(p):
+    """llamada_type : TYPE '(' ID ')'
+    """
+    variable = vars_table.search(p[3])
+
+    if variable:
+        if not variable["is_array"]:
+            ic_generator.stackOperators.append(p[1])
+            ic_generator.stackOperands.append(variable["address"])
+            ic_generator.stackTypes.append(variable["type"])
+            ic_generator.generate_analysis_quadruple()
+        else:
+            raise TypeError(f"Type function cannot be passed arrays")
+
+
 def p_valor(p):
     """valor : llamada
              | llamada_analisis
+             | llamada_clasificador
+             | llamada_kmeans
+             | llamada_type
              | id
              | arreglo
              | in
@@ -722,6 +845,7 @@ def p_id(p):
 
     if variable:
         if variable["is_array"]:
+            
             if p[2] is None:
                 raise TypeError(f"Array values must be followed by an index, at array call for '{p[1]}'")
             # Aqui sacamos las filas y las columas del dope vector
@@ -738,6 +862,8 @@ def p_id(p):
                 j = 1
                 address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
             else:
+                if len(ic_generator.stackOperands) == 0:
+                    raise TypeError(f"Missing one dimension from array call at '{p[1]}'")
                 j = ic_generator.stackOperands.pop()
                 ic_generator.stackTypes.pop()
                 address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
