@@ -203,6 +203,7 @@ def p_estatuto(p):
                 | ciclo_w
                 | ciclo_f
                 | llamada ';'
+                | llamada_graph ';'
     """
 
 
@@ -480,6 +481,33 @@ def p_llamadaD(p):
                 | empty
     """
 
+
+def p_llamada_graph(p):
+    """llamada_graph : GRAPH '(' ID ',' ID ',' constant_s ')'
+    """
+    variable_x = vars_table.search(p[3])
+    variable_y = vars_table.search(p[5])
+
+    if variable_x and variable_y:
+        if not (variable_x['is_array'] and variable_y['is_array']):
+            raise TypeError(f"Parameters for graph call must be arrays")
+        if not (variable_x['dope_vector'][0] == 1 and variable_y['dope_vector'][0] == 1):
+            raise TypeError(f"Parameters for graph call must be one dimensional arrays")
+        if not (p[7] in ['"plot"', '"scatter"']):
+            raise TypeError(f"Parameter for graph type must be either 'plot' or 'scatter', not '{p[7]}'")
+
+        ic_generator.stackOperators.append(p[1])
+
+        address_x = variable_x['address']
+        address_y = variable_y['address']
+        ic_generator.stackOperands.append(address_x)
+        ic_generator.stackTypes.append(variable_x["type"])
+        ic_generator.stackOperands.append(address_y)
+        ic_generator.stackTypes.append(variable_y["type"])
+
+        ic_generator.generate_analysis_quadruple()
+
+
 # Para funciones como mean, std, var etc..
 def p_llamada_analisis(p):
     """llamada_analisis : analisis_id '(' ID ')'
@@ -507,7 +535,6 @@ def p_analisis_id(p):
                    | MAX
                    | MEDIAN
                    | SIZE
-    
     """
     p[0] = p[1]
     ic_generator.stackOperators.append(p[1])
@@ -701,7 +728,7 @@ def p_constant_s(p):
 def p_llamada_type(p):
     """llamada_type : TYPE '(' ID ')'
     """
-    variable = vars_table.current_scope["vars"][p[3]]
+    variable = vars_table.search(p[3])
 
     if variable:
         if not variable["is_array"]:

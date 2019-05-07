@@ -6,7 +6,8 @@ void standard_deviation(){
     out(std(a), "STD");
 }
 void main() {
-    int[5] x = [1, 1, 1, 1, 1];
+    int[5] x = [1, 2, 3, 4, 5];
+    int[5] y = [1, 2, 3, 4, 5];
     float c = mean(x);
     string d = "Hello";
     out("King of the North");
@@ -17,4 +18,5 @@ void main() {
     standard_deviation();
     out(size(a), "SIZE");
     out(type(c));
+    graph(x, y, "plot");
 }

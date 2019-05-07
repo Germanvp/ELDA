@@ -41,6 +41,7 @@ reserved = {
             'max': 'MAX',
             'size': 'SIZE',
             'type': 'TYPE',
+            'graph': 'GRAPH',
             'median': 'MEDIAN',
         }
 

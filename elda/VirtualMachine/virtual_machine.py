@@ -8,6 +8,8 @@ Created on Thu Apr 25 16:45:52 2019
 
 from .main_memory import MainMemory
 import numpy as np
+import matplotlib.pyplot as plt
+from pylab import *
 import json
 import ast
 
@@ -325,6 +327,27 @@ class VirtualMachine:
                 variable = self.construct_dimensional_variable(memory, op1, array_shape)
 
                 memory_result[result] = np.median(variable)
+                ip += 1
+            elif operator == "GRAPH":
+                memory = self.get_memory(op1)
+                memory2 = self.get_memory(op2)
+                type_memory = self.get_memory(result)
+
+                # Sacamos la forma que debe tener el arreglo.
+                # Y el arreglo verdad...
+                array_shape = self.array_sizes[op1]
+                array_shape2 = self.array_sizes[op2]
+                variable = self.construct_dimensional_variable(memory, op1, array_shape)
+                variable2 = self.construct_dimensional_variable(memory2, op2, array_shape2)
+
+                if type_memory[result] == 'plot':
+                    plot(variable[0], variable2[0])
+                    grid(True)
+                    show()
+                elif type_memory[result] == 'scatter':
+                    plt.scatter(variable, variable2)
+                    plt.show()
+
                 ip += 1
 
     def construct_dimensional_variable(self, memory, start, shape):

@@ -334,6 +334,24 @@ class ICG:
 
             quadruple = Quadruple(var, None, function, result)
             self.quadrupleList.append(quadruple)
+        elif function in ['GRAPH']:
+            y = self.stackOperands.pop()
+            x = self.stackOperands.pop()
+
+            y_type = self.stackTypes.pop()
+            x_type = self.stackTypes.pop()
+
+            plot_type_val = self.stackOperands.pop()
+            plot_type_type = self.stackTypes.pop()
+
+            if plot_type_type in ['int', 'float', 'bool']:
+                raise TypeError(f"Graph type parameter must be string, not '{plot_type_type}'")
+
+            if y_type in ['string', 'bool'] or x_type in ['string', 'bool']:
+                raise TypeError(f"Cannot perform graph with flexible type")
+
+            quadruple = Quadruple(x, y, function, plot_type_val)
+            self.quadrupleList.append(quadruple)
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
         columns = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
