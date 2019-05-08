@@ -447,7 +447,6 @@ class VirtualMachine:
                     file_data = file_data.T
                     
                 # Si las shape del archivo y de la matriz/vector que queremos no son iguales
-                # cuello.
                 if variable_shape != file_data.shape:
                     raise TypeError(f"File data is of size {file_data.shape} not {variable_shape}")
                     
@@ -460,9 +459,6 @@ class VirtualMachine:
                         temp_address = variable_address + offset
                         
                         var_memory[temp_address] = file_data[i, j]
-#                ## TEST
-#                x = self.construct_dimensional_variable(var_memory, result, variable_shape)
-#                print(x == file_data)
                 
                 ip += 1
                 
