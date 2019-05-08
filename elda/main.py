@@ -29,13 +29,13 @@ def elda():
                     print('Empty file')
                 else:
                     parser.parser.parse(s)
-                    pos = 1
-                    print("    operator\top1\top2\tresult")
-                    for i in parser.ic_generator.quadrupleList:
-                        print(pos, repr(i))
-                        pos += 1
-                    for k, v in parser.ic_generator.constants.items():
-                        print(k, v)
+                    # pos = 1
+                    # print("    operator\top1\top2\tresult")
+                    # for i in parser.ic_generator.quadrupleList:
+                    #     print(pos, repr(i))
+                    #     pos += 1
+                    # for k, v in parser.ic_generator.constants.items():
+                    #     print(k, v)
                     parser.ic_generator.generate_obj_file(args[1], str(parser.vars_table.table))
                     print(f'Done! Compiled file at {args[1][:-5]}.eo')
         except TypeError as ex:
