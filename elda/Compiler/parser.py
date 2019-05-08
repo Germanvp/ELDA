@@ -468,7 +468,7 @@ def p_expresionL(p):
     """expresionL : expresion
     
     """
-    ic_generator.generate_param_quadruple(p[1])
+    ic_generator.generate_param_quadruple()
 
 
 def p_llamadaD(p):
@@ -854,13 +854,13 @@ def p_id(p):
             # Si es un vector o matriz.
             if dope_vector[0] == 1:
                 j = 1
-                address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
+                address = ic_generator.calculate_vector_index_address(base, i, dope_vector)
             else:
                 if len(ic_generator.stackOperands) == 0:
                     raise TypeError(f"Missing one dimension from array call at '{p[1]}'")
                 j = ic_generator.stackOperands.pop()
                 ic_generator.stackTypes.pop()
-                address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
+                address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector)
 
             ic_generator.stackOperands.append(f"({address})")
             ic_generator.stackTypes.append(variable["type"])

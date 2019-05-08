@@ -31,14 +31,14 @@ void quicksort(int low, int high) {
     }
 }
 
-void printArray(int size) {
-    for i with range(0, size) {
+void printArray(int s) {
+    for i with range(0, s) {
         out(arr[i]);
     }
 }
 
 void main() {
-    int n = 13;
+    int n = size(arr);
     quicksort(0, n - 1);
     printArray(n);
 }
