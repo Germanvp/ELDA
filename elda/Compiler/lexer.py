@@ -80,7 +80,3 @@ def t_error(t):
     
 
 lexer = lex.lex()
-
-# lex.input('int test = "hola";')
-# for token in iter(lex.token, None):
-#     print(repr(token.type), repr(token.value))

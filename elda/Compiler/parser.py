@@ -12,6 +12,7 @@ from .vars_table import VarsTable
 from .intermediate_code_generator import ICG
 from .lexer import tokens
 
+
 vars_table = VarsTable()
 ic_generator = ICG()
 
@@ -53,7 +54,6 @@ def p_main_id(p):
         vars_table.initialize()
 
     ic_generator.reset_bases()
-    # vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
     if vars_table.current_scope is not vars_table.table["global"]:
         ic_generator.create_array_size(vars_table.current_scope)
         del vars_table.current_scope["vars"]
@@ -66,15 +66,14 @@ def p_main(p):
     """
     ic_generator.reset_bases()
     vars_table.current_scope["vars_count"] = len(vars_table.current_scope["vars"])
-    
+
     # Guardamos tamaños de arreglos para usarlos en VM.
     ic_generator.create_array_size(vars_table.current_scope)
     del vars_table.current_scope["vars"]
-    
+
     # Guardamos tamaños de arreglos para usarlos en VM.
     ic_generator.create_array_size(vars_table.table["global"])
     del vars_table.table["global"]["vars"]
-
 
 
 def p_r_main_par(p):
@@ -149,10 +148,10 @@ def p_declaracion(p):
     if dope_vector:
         # Checamos si ya existe una asignacion para el vector/matriz.
         if ic_generator.stackOperators and ic_generator.stackOperators[-1] in ['=']:
-            
+
             if dope_vector != p[4]:
                 raise TypeError(f"Dimensional variable {p[2]} must be of size {dope_vector} not {p[4]}")
-                
+
             ic_generator.stackOperators.pop()
             # Vamos poniendo de ultimo al primero. 
             # Yo se, esta feo asi el for loop.
@@ -402,7 +401,7 @@ def p_ciclo_f(p):
     if variable is not None:
         address = variable["address"]
     else:
-        raise TypeError(f"Variable {p[1]} not declared")
+        raise TypeError(f"'{p[1]}' variable not declared.")
     # Creamos el quadruplo de la suma del iterador mas 1.
     ic_generator.stackOperands.append(address)
     ic_generator.stackTypes.append("int")
@@ -466,12 +465,11 @@ def p_llamada_id(p):
     p[0] = p[1]
 
 
-# Expresion para que se puedan guardar los parametros como parametros, duh.
 def p_expresionL(p):
     """expresionL : expresion
     
     """
-    ic_generator.generate_param_quadruple(p[1])
+    ic_generator.generate_param_quadruple()
 
 
 def p_llamadaD(p):
@@ -513,19 +511,19 @@ def p_llamada_analisis(p):
     
     """
     variable = vars_table.search(p[3])
-    
+
     ## Checamos si la variable existe y si es un arreglo.
     if variable:
         if variable["is_array"]:
             address = variable["address"]
             ic_generator.stackOperands.append(address)
             ic_generator.stackTypes.append(variable["type"])
-            
+
             ic_generator.generate_analysis_quadruple()
         else:
             raise TypeError(f"Parameter for function '{p[1]}' must be an array")
 
-    
+
 def p_analisis_id(p):
     """analisis_id : MEAN
                    | STD
@@ -535,38 +533,39 @@ def p_analisis_id(p):
                    | MEDIAN
                    | SIZE
     """
-    
+
     p[0] = p[1]
     ic_generator.stackOperators.append(p[1])
-    
+
+
 def p_llamada_clasificador(p):
     """llamada_clasificador : clasificador_id '(' ID ',' ID ')'
     """
     x = vars_table.search(p[3])
     y = vars_table.search(p[5])
-    
+
     if x and y:
         if x["is_array"] and y["is_array"]:
             # Sacamos direccion de vectores/matrices y sus formas.
             x_address = x["address"]
             y_address = y["address"]
-            
+
             x_shape = x["dope_vector"]
             y_shape = y["dope_vector"]
 
-            ### Si no coinciden pues cuello.
+            # Si no coinciden manda error.
             if x_shape[1] != y_shape[1] or y_shape[0] != 1 or x_shape[0] != 1:
                 raise TypeError(f"Shapes for {p[3]} and {p[5]} do not match for {p[1]}().")
-                
+
             # Por si las necesitamos en un futuro.
             ic_generator.stackOperands.append(x_address)
             ic_generator.stackOperands.append(y_address)
-            
+
             ic_generator.stackTypes.append(x["type"])
             ic_generator.stackTypes.append(y["type"])
-            
+
             ic_generator.generate_analysis_quadruple()
-            
+
             # Regresa el tamaño para que se verifique en la asignacion.
             p[0] = (1, 2)
         else:
@@ -585,9 +584,9 @@ def p_llamada_kmeans(p):
 
             x_shape = x["dope_vector"]
 
-            # Si no coinciden pues cuello.
+            # Si no coinciden manda error.
             if x_shape[1] != 2:
-                raise TypeError(f"Shapes for {p[3]} and {p[5]} not appropiate for classifier.")
+                raise TypeError(f"Shape for {p[5]} not appropiate for classifier.")
 
             ic_generator.stackOperators.append(p[1])
 
@@ -601,14 +600,15 @@ def p_llamada_kmeans(p):
             # Regresa el tamaño para que se verifique en la asignacion.
             p[0] = (int(p[3]), 2)
         else:
-            raise TypeError("Regression call parameters must be arrays")
+            raise TypeError("k_means call parameters must be arrays")
+
 
 def p_clasificador_id(p):
     """clasificador_id  : LOGISTIC_REGRESSION
                         | LINEAR_REGRESSION
     """
     p[0] = p[1]
-    
+
     ic_generator.stackOperators.append(p[1])
     
     
@@ -631,8 +631,8 @@ def p_open(p):
             ic_generator.generate_open_quadruple()
     else:
         raise TypeError(f"'{p[1]}' variable not declared.")
-        
-    
+
+
 def p_expresion(p):
     """expresion : not expr
                  | not expr and expresion
@@ -861,7 +861,7 @@ def p_id(p):
 
     if variable:
         if variable["is_array"]:
-            
+
             if p[2] is None:
                 raise TypeError(f"Array values must be followed by an index, at array call for '{p[1]}'")
             # Aqui sacamos las filas y las columas del dope vector
@@ -876,13 +876,13 @@ def p_id(p):
             # Si es un vector o matriz.
             if dope_vector[0] == 1:
                 j = 1
-                address = ic_generator.calculate_vector_index_address(base, i, dope_vector, p[1])
+                address = ic_generator.calculate_vector_index_address(base, i, dope_vector)
             else:
                 if len(ic_generator.stackOperands) == 0:
                     raise TypeError(f"Missing one dimension from array call at '{p[1]}'")
                 j = ic_generator.stackOperands.pop()
                 ic_generator.stackTypes.pop()
-                address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector, p[1])
+                address = ic_generator.calculate_matrix_index_address(base, i, j, dope_vector)
 
             ic_generator.stackOperands.append(f"({address})")
             ic_generator.stackTypes.append(variable["type"])
@@ -938,7 +938,7 @@ def p_arregloD(p):
     """
     if len(p) > 4:
         if p[5][1] != p[2]:
-            raise TypeError('Arreglos en misma matriz deben ser de tamaños iguales')
+            raise TypeError('Arrays in matrix must be of same size')
         p[0] = (p[5][0] + 1, p[2])
     else:
         p[0] = (1, p[2])

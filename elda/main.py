@@ -13,6 +13,9 @@ import json
 
 
 def elda():
+    """
+    Entry point for the ELDA languaje
+    """
     args = sys.argv[1:]
     action = args[0]
     assert action in ['-c', '-e'], 'Action must be one of -c (compile) or -e (execute): ' + action
@@ -34,8 +37,6 @@ def elda():
                     for k, v in parser.ic_generator.constants.items():
                         print(k, v)
                     parser.ic_generator.generate_obj_file(args[1], str(parser.vars_table.table))
-                    # print(json.dumps(parser.vars_table.table, indent=2, sort_keys=True))
-                    # print(json.dumps(parser.vars_table.current_scope, indent=2, sort_keys=True))
                     print(f'Done! Compiled file at {args[1][:-5]}.eo')
         except TypeError as ex:
             print(ex)
