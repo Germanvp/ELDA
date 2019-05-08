@@ -1,6 +1,6 @@
 # Extensive Language for Data Analysis (ELDA)
 
-## Abput ELDA
+## About ELDA
 ### Vision / Purpose
 Extensive Language for Data Analysis is born with the vision of providing a tool for data analysis that results from a commitment in equal parts between the learning of a programming language focused on data analysis, and the efficient handling of data for processing in useful calculations for anyone with context in data science. All this with the purpose that the language serves as a facilitator for users without technological context in the adoption of analysis tools, thus being a bridge between people with mathematical knowledge but without programming knowledge to the use of more robust data analysis and manipulation tools.
 
