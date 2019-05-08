@@ -3,13 +3,14 @@
 """
 Created on Thu Apr 25 16:45:52 2019
 
-@author: German
+@author: German Villacorta & Juan Manuel Perez
 """
 import sklearn
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.cluster import KMeans
 from .main_memory import MainMemory
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from pylab import *
 import json
@@ -17,17 +18,22 @@ import ast
 
 
 class VirtualMachine:
+    """
+    Handles execution of intermediate code generated in compilation and the loading of obj file.
+    """
 
     def __init__(self):
+        """
+        Initializes the ma_memory as an instance of MainMemory and the current array_sizes as empty
+        """
         self.main_memory = MainMemory()
         self.array_sizes = {}
         self.procedure_stack = []
 
     def load_obj_file(self, file_name):
         """
-        TODO: What structure will the OBJ file have?
-        :param file_name:
-        :return:
+        Loads the object file into the Virtual Machine
+        :param file_name: The file name of the obj file
         """
         file = open(file_name, "r")
         data = json.load(file)
@@ -51,9 +57,8 @@ class VirtualMachine:
     @staticmethod
     def convert_to_type(value):
         """
-
-        :param value:
-        :return:
+        Convert a memory value into its python type counterpart
+        :param value: The value to be converted
         """
         if value is None:
             return None
@@ -69,6 +74,12 @@ class VirtualMachine:
             return float(value)
 
     def process_quadruples(self, quadruple_list, dir_func, ip=0):
+        """
+        Infinite array that processes all quadruples in the quadruple list until the main function ENDPROC is reached.
+        :param quadruple_list: The quadruple list with all quadruples
+        :param dir_func: The function directory
+        :param ip: The instruction pointer. Defaults to 0.
+        """
         params = []
         return_value = None
         # Para que sepamos de que tamaño son los arreglos.
@@ -97,10 +108,11 @@ class VirtualMachine:
                 ip += 1
             elif operator == "/":
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
+                if memory2[op2] == 0:
+                    raise TypeError(f"Divide Error: Cannot divide over 0")
                 memory_result[result] = memory1[op1] / memory2[op2]
                 ip += 1
             elif operator == "=":
-                # self.active_memory.insert_into_memory(op1, result)
                 memory1, memory2, memory_result = self.get_memories(op1, op2, result)
                 res_type = self.get_type(result)
                 memory_result[result] = res_type(memory1[op1])
@@ -172,8 +184,8 @@ class VirtualMachine:
                 self.main_memory.active_record = self.main_memory.memory_execution[
                     list(self.main_memory.memory_execution.keys())[-1]]
 
-                ## Lo ponemos en el stack de funciones
-                ## sacamos los tamaños de sus arreglos si es que tiene.
+                # Lo ponemos en el stack de funciones
+                # sacamos los tamaños de sus arreglos si es que tiene.
                 # Los tamaños tiene que ser los del global + los de la func.
                 self.procedure_stack.append(op1)
 
@@ -182,9 +194,6 @@ class VirtualMachine:
                 new_array_sizes.update(dir_func[op1]["array_sizes"])
 
                 self.array_sizes = new_array_sizes
-
-                #                # Por si queremos checar
-                # print(self.procedure_stack, self.array_sizes)
 
                 if int(op2) == dir_func[op1]["params_count"]:
                     if self.main_memory.active_record.check_params(dir_func[op1]["params_type"], params):
@@ -220,11 +229,8 @@ class VirtualMachine:
                     new_array_sizes.update(dir_func[self.procedure_stack[-1]]["array_sizes"])
 
                     self.array_sizes = new_array_sizes
-
                 else:
                     self.array_sizes = {}
-                #                # Por si queremos checar
-                # print(self.procedure_stack, self.array_sizes)
 
                 if return_value is not None:
                     return return_value
@@ -251,7 +257,6 @@ class VirtualMachine:
                 memory_result[result] = np.mean(variable)
                 ip += 1
             elif operator == "SIZE":
-                memory = self.get_memory(op1)
                 memory_result = self.get_memory(result)
 
                 # Sacamos la forma que debe tener el arreglo.
@@ -352,7 +357,7 @@ class VirtualMachine:
 
                 ip += 1
             elif operator == "LINEAR_REGRESSION":
-                #Sacamos X e Y.
+                # Sacamos X e Y.
                 X_memory = self.get_memory(op1)
                 Y_memory = self.get_memory(op2)
                 
@@ -365,18 +370,19 @@ class VirtualMachine:
                                 
                 X = (np.array(X)).T
                 Y = (np.array(Y)).T
-                
-                #Memoria en donde se agregaran los parametros.
+
+                # Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
                 
                 clf = LinearRegression().fit(X, Y)
                                 
+                print(clf.coef_, clf.intercept_)
                 params_memory[result] = clf.coef_[0][0]
                 params_memory[result + 1] = clf.intercept_[0]
                 
                 ip += 1
             elif operator == "LOGISTIC_REGRESSION":
-                #Sacamos X e Y.
+                # Sacamos X e Y.
                 X_memory = self.get_memory(op1)
                 Y_memory = self.get_memory(op2)
                 
@@ -390,7 +396,7 @@ class VirtualMachine:
                 X = (np.array(X)).T
                 Y = (np.array(Y)).T
                 
-                #Memoria en donde se agregaran los parametros.
+                # Memoria en donde se agregaran los parametros.
                 params_memory = self.get_memory(result)
                 
                 clf = LogisticRegression().fit(X, Y)
@@ -418,10 +424,51 @@ class VirtualMachine:
                     result += 1
                     i += 1
                 ip += 1
+            elif operator == "OPEN_FILE":
+                # Sacamos la memoria del archivo y del vector/matriz al que se
+                # lo queremos asignar.
+                
+                file_name_memory = self.get_memory(op1)
+                var_memory = self.get_memory(result)
+                
+                # Sacamos el string con el nombre del archivo.
+                file_name = file_name_memory[op1]
+                
+                variable_shape = self.array_sizes[result]
+                variable_address = result
+                                
+                # Leemos el archivo y sacamos su matriz correspondiente.
+                try:
+                    file_data = (pd.read_csv(file_name)).values
+                except FileNotFoundError:
+                    raise TypeError(f"File {file_name} not found")
+                
+                if file_data.shape[1] == 1:
+                    file_data = file_data.T
+                    
+                # Si las shape del archivo y de la matriz/vector que queremos no son iguales
+                if variable_shape != file_data.shape:
+                    raise TypeError(f"File data is of size {file_data.shape} not {variable_shape}")
+                    
+                # Asignamos cada valor uno por uno.
+                
+                for i in range(0, file_data.shape[0]):
+                    for j in range(0, file_data.shape[1]):
+                        
+                        offset = i * file_data.shape[1] + j
+                        temp_address = variable_address + offset
+                        
+                        var_memory[temp_address] = file_data[i, j]
+                
+                ip += 1
+                
+                
+                
+                
 
     def construct_dimensional_variable(self, memory, start, shape):
         """
-            Funcion que construye y regresa los vectores y matrices. 
+        Funcion que construye y regresa los vectores y matrices.
         """
         # Vamos poniendo todos los valores en un arreglo de 1D 
         # en donde el tamaño es la multiplicacion de rows x columns

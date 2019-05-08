@@ -34,6 +34,10 @@ class Quadruple:
         return f"{self.operator},{self.op1},{self.op2},{self.result}\n"
 
     def change_result(self, res):
+        """
+        Changes the quadruple result.
+        :param res: The new result to be assigned
+        """
         self.result = res
 
 
@@ -71,11 +75,15 @@ class ICG:
         self.string_start = 10000
         self.bool_start = 12500
 
+        # Counters para saber cuantas variables se han declarado de cada tipo, int, float, string, bool
         self.global_counters = [0, 0, 0, 0]
         self.local_counters = [0, 0, 0, 0]
         self.constant_counters = [0, 0, 0, 0]
 
     def reset_bases(self):
+        """
+        Resets local counters
+        """
         self.local_counters = [0, 0, 0, 0]
 
     def get_memory_address(self, memory_type, var_type, size=1, value=None):
@@ -171,6 +179,9 @@ class ICG:
             self.quadrupleList.append(quadruple)
 
     def generate_not_quadruple(self):
+        """
+        Generates a not quadruple with the next operand in the stack
+        """
         operand = self.stackOperands.pop()
         var_type = self.stackTypes.pop()
 
@@ -187,6 +198,9 @@ class ICG:
             raise TypeError(f"Cannot apply operator 'not' to type '{var_type}'")
 
     def generate_is_quadruple(self):
+        """
+        Generates an is quadruple. This is called inside the when declaration in the parser.
+        """
         left_operand = self.stackOperands.pop()
         right_operand = self.whenOperands[len(self.whenOperands) - 1]
 
@@ -210,6 +224,9 @@ class ICG:
             self.stackTypes.append(result_type)
 
     def generate_out_quadruple(self):
+        """
+        Generates an out quadruple when the parser recognizes an out.
+        """
         result = self.stackOperands.pop()
         self.stackTypes.pop()
 
@@ -220,6 +237,9 @@ class ICG:
         self.quadrupleList.append(quadruple)
 
     def generate_in_quadruple(self):
+        """
+        Generates an in quadruple
+        """
         result = self.get_memory_address("local", "string")
 
         operator = self.stackOperators.pop()
@@ -231,6 +251,10 @@ class ICG:
         self.stackTypes.append('string')
 
     def generate_gotoF(self):
+        """
+        Generates a gotoF with the next operand of the stack as result.
+        :return:
+        """
         exp_type = self.stackTypes.pop()
         if exp_type != "bool":
             raise TypeError(f"Conditional expressions must resolve to bool")
@@ -241,28 +265,45 @@ class ICG:
             self.stackJumps.append(len(self.quadrupleList) - 1)
 
     def generate_goto(self):
+        """
+        Generates an empty Goto rule.
+        """
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
 
     def generate_main_goto(self):
+        """
+        Generates the goto that takes the execution into the main function.
+        """
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
         self.main_goto_pos = len(self.quadrupleList) - 1
 
     def generate_else_quadruple(self):
+        """
+        Generates the quadruples needed for the else keyword in a conditional statement.
+        """
         quadruple = Quadruple(None, None, "Goto", None)
         self.quadrupleList.append(quadruple)
         pos = self.stackJumps.pop()
         self.stackJumps.append(len(self.quadrupleList) - 1)
         self.fill_quadruple(pos)
 
-    def generate_param_quadruple(self, param):
+    def generate_param_quadruple(self):
+        """
+        Generates a param quadruple with the next operand in the stack.
+        """
         quadruple = Quadruple(None, None, "param", self.stackOperands.pop())
 
         self.quadrupleList.append(quadruple)
         self.paramCount = self.paramCount + 1
 
     def generate_function_call(self, func, return_type):
+        """
+        Generates a GOSUB quadruple.
+        :param func: The name of the function to call.
+        :param return_type: The return type of the function.
+        """
         # Hacer la nueva variable tN.
 
         # Si es void entonces no hay necesidad de hacer temporal ni poner
@@ -284,31 +325,59 @@ class ICG:
         self.paramCount = 0
 
     def fill_goto(self, result):
+        """
+        Fills the specified goto with the passed result
+        :param result: The value with which to fill the goto
+        """
         pos = len(self.quadrupleList) - 1
         self.quadrupleList[pos].change_result(result)
 
     def fill_main_goto(self, result):
+        """
+        Fills the main goto with the position of the first quadruple in main
+        :param result: The position with which to fill the main goto.
+        """
         if self.main_goto_pos is not None:
             self.quadrupleList[self.main_goto_pos].change_result(result)
 
     def fill_quadruple(self, pos):
+        """
+        Fills the specified quadruple with the length of the quadrupleList
+        :param pos: The position of the quadruple to fill
+        """
         self.quadrupleList[pos].change_result(len(self.quadrupleList) + 1)
 
     def generate_return_quadruple(self, func_type):
+        """
+        Generates a return quadruple
+        :param func_type: The type of the function that is generating the return.
+        :return:
+        """
         self.semantic_cube.is_valid(func_type, self.stackTypes.pop(), Operators.RETURN)
         quadruple = Quadruple(self.stackOperands.pop(), None, 'RETURN', None)
 
         self.quadrupleList.append(quadruple)
 
     def generate_endproc(self):
+        """
+        Generates an ENDPROC quadruple. Called every time a function finishes.
+        """
         quadruple = Quadruple(None, None, 'ENDPROC', None)
         self.quadrupleList.append(quadruple)
 
     def generate_era(self, func_name):
+        """
+        Generates the ERA quadruple, which initiates function size in execution memory.
+        :param func_name: The function to which ERA will be called
+        """
         quadruple = Quadruple(func_name, None, 'ERA', None)
         self.quadrupleList.append(quadruple)
 
     def generate_analysis_quadruple(self, k_clusters=None):
+        """
+        Generates all analysis quadruples depending on the next operator.
+        :param k_clusters: The amount of clusters with which k_means will be called
+        """
         function = self.stackOperators.pop().upper()
         if function in ['MEAN', 'MIN', 'MAX', 'STD', 'VAR', 'MEDIAN', 'SIZE']:
             array_pointer = self.stackOperands.pop()
@@ -415,8 +484,26 @@ class ICG:
 
                 self.stackTypes.append("float")
                 self.stackTypes.append("float")
+                
+    def generate_open_quadruple(self):
+        ## Sacamos el nombre del archivo y la variable a la cual asignaremos sus resultados.
+        variable = self.stackOperands.pop()
+        file_name = self.stackOperands.pop()
 
-    def calculate_matrix_index_address(self, base, i, j, dope_vector, name):
+        function = (self.stackOperators.pop()).upper()
+        
+        quadruple = Quadruple(file_name, None, function, variable)
+        self.quadrupleList.append(quadruple)
+        
+
+    def calculate_matrix_index_address(self, base, i, j, dope_vector):
+        """
+        Generate all quadruples needed for calculating the position of a value in a matrix
+        :param base: The base address of the matrix
+        :param i: The row in which the desired value is at
+        :param j: The column in which the desired value is at
+        :param dope_vector: The dope_vector for the array
+        """
         columns = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
         rows = self.get_memory_address("constants", "int", value=str(dope_vector[0]))
         zero = self.get_memory_address("constants", "int", value=str(0))
@@ -439,7 +526,13 @@ class ICG:
 
         return result_address
 
-    def calculate_vector_index_address(self, base, i, dope_vector, name):
+    def calculate_vector_index_address(self, base, i, dope_vector):
+        """
+        Generate all quadruples needed for calculating the position of a value in a matrix
+        :param base: The base address of the matrix
+        :param i: The position in which the desired value is at
+        :param dope_vector: The dope_vector for the array
+        """
         size = self.get_memory_address("constants", "int", value=str(dope_vector[1]))
         zero = self.get_memory_address("constants", "int", value=str(0))
         base = self.get_memory_address("constants", "int", value=str(base))
@@ -455,6 +548,10 @@ class ICG:
         return result_address
 
     def create_array_size(self, table):
+        """
+        Creates the array_size table inside the passed table
+        :param table: The table in which the array_sizes table will be
+        """
         table["array_sizes"] = {}
         for variable in table["vars"]:
             data = table["vars"][variable]
@@ -464,6 +561,11 @@ class ICG:
                 table["array_sizes"][address] = size
 
     def generate_obj_file(self, name, dir_func):
+        """
+        Generates the object file based on the quadruple list, the constants table and the function directory
+        :param name: The file name that the .eo file will have
+        :param dir_func: The function directory
+        """
         file = {
             "Quadruples": [(quad.operator, quad.op1, quad.op2, quad.result) for quad in self.quadrupleList],
             "Dir Func": dir_func,

@@ -45,7 +45,8 @@ reserved = {
             'median': 'MEDIAN',
             'linear_regression': 'LINEAR_REGRESSION',
             'logistic_regression': 'LOGISTIC_REGRESSION',
-            'k_means': 'K_MEANS'
+            'k_means': 'K_MEANS',
+            'open_file': 'OPEN_FILE'
         }
 
 tokens = ['INT', 'FLOAT', 'STRING', 'ID', 'EQUAL', 'COMPOPER', 'RELOP', 'SUM', 'MINUS'
@@ -79,7 +80,3 @@ def t_error(t):
     
 
 lexer = lex.lex()
-
-# lex.input('int test = "hola";')
-# for token in iter(lex.token, None):
-#     print(repr(token.type), repr(token.value))
