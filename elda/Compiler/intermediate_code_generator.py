@@ -484,6 +484,17 @@ class ICG:
 
                 self.stackTypes.append("float")
                 self.stackTypes.append("float")
+                
+    def generate_open_quadruple(self):
+        ## Sacamos el nombre del archivo y la variable a la cual asignaremos sus resultados.
+        variable = self.stackOperands.pop()
+        file_name = self.stackOperands.pop()
+
+        function = (self.stackOperators.pop()).upper()
+        
+        quadruple = Quadruple(file_name, None, function, variable)
+        self.quadrupleList.append(quadruple)
+        
 
     def calculate_matrix_index_address(self, base, i, j, dope_vector):
         """

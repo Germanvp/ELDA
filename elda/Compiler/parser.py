@@ -201,6 +201,7 @@ def p_estatuto(p):
                 | ciclo_f
                 | llamada ';'
                 | llamada_graph ';'
+                | open ';'
     """
 
 
@@ -609,6 +610,27 @@ def p_clasificador_id(p):
     p[0] = p[1]
 
     ic_generator.stackOperators.append(p[1])
+    
+    
+def p_open(p):
+    """open : OPEN_FILE '(' STRING ',' ID ')'
+    """
+    variable = vars_table.search(p[5])
+    
+    if variable:
+        if variable['is_array']:
+            ### Agregamos el string del archivo a la memoria. 
+            address_file = ic_generator.get_memory_address("constants", "string", value = p[3])
+            address_var = variable['address']
+            
+            ic_generator.stackOperands.append(address_file)
+            ic_generator.stackOperands.append(address_var)
+
+            ic_generator.stackOperators.append(p[1])
+            
+            ic_generator.generate_open_quadruple()
+    else:
+        raise TypeError(f"'{p[1]}' variable not declared.")
 
 
 def p_expresion(p):
