@@ -438,7 +438,10 @@ class VirtualMachine:
                 variable_address = result
                                 
                 # Leemos el archivo y sacamos su matriz correspondiente.
-                file_data = (pd.read_csv(file_name)).values
+                try:
+                    file_data = (pd.read_csv(file_name)).values
+                except FileNotFoundError:
+                    raise TypeError(f"File {file_name} not found")
                 
                 if file_data.shape[1] == 1:
                     file_data = file_data.T
